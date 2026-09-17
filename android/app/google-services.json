@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "323483418354",
+    "project_id": "dindin-1c2a5",
+    "storage_bucket": "dindin-1c2a5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:323483418354:android:b37042193914b595c0da6b",
+        "android_client_info": {
+          "package_name": "com.example.sistema_financeiro"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "323483418354-3sn2s431ku8v8gk1ki69jk4f9156723d.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCur7j_7ZsT_3ICbJwLoMAiD0eTh4dCyII"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "323483418354-3sn2s431ku8v8gk1ki69jk4f9156723d.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "323483418354-pt042qvuabfl6u7lpbte5jjmjob6ji93.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.sistemaFinanceiro"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
