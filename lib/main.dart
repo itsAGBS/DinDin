@@ -1,9 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'models/transaction_model.dart';
-import 'providers/transaction_provider.dart';
+import 'package:firebase_core/firebase_core.dart';
 
-void main() {
+import 'firebase_options.dart';
+import 'models/transaction_model.dart';
+import 'providers/auth_provider.dart';
+import 'providers/transaction_provider.dart';
+import 'screens/login_screen.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const DinDinApp());
 }
 
@@ -12,8 +21,11 @@ class DinDinApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => TransactionProvider()..carregarDados(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => TransactionProvider()..carregarDados()),
+      ],
       child: MaterialApp(
         title: 'DinDin',
         debugShowCheckedModeBanner: false,
@@ -21,9 +33,32 @@ class DinDinApp extends StatelessWidget {
           colorSchemeSeed: Colors.indigo,
           useMaterial3: true,
         ),
-        home: const TelaTesteBanco(),
+        home: const AuthGate(),
       ),
     );
+  }
+}
+
+/// Decide qual tela mostrar de acordo com o estado de autenticação:
+/// tela de carregamento enquanto o Firebase resolve a sessão, tela de
+/// login se não houver ninguém logado, ou o app em si se houver.
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+
+    switch (auth.status) {
+      case AuthStatus.carregando:
+        return const Scaffold(
+          body: Center(child: CircularProgressIndicator()),
+        );
+      case AuthStatus.naoAutenticado:
+        return const LoginScreen();
+      case AuthStatus.autenticado:
+        return const TelaTesteBanco();
+    }
   }
 }
 
@@ -35,12 +70,30 @@ class TelaTesteBanco extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<TransactionProvider>();
+    final auth = context.watch<AuthProvider>();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('DinDin - Teste do banco')),
+      appBar: AppBar(
+        title: const Text('DinDin - Teste do banco'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: 'Sair',
+            onPressed: () => auth.sair(),
+          ),
+        ],
+      ),
       body: Center(
-        child: Text('Saldo atual: R\$ ${provider.saldo.toStringAsFixed(2)}\n'
-            'Transacoes: ${provider.transacoes.length}'),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (auth.user?.email != null)
+              Text('Logado como: ${auth.user!.email}'),
+            const SizedBox(height: 12),
+            Text('Saldo atual: R\$ ${provider.saldo.toStringAsFixed(2)}\n'
+                'Transacoes: ${provider.transacoes.length}'),
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
