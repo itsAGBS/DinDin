@@ -17,7 +17,12 @@ class DatabaseHelper {
   Future<Database> _initDB(String fileName) async {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, fileName);
-    return await openDatabase(path, version: 1, onCreate: _createDB);
+    return await openDatabase(
+      path,
+      version: 2,
+      onCreate: _createDB,
+      onUpgrade: _upgradeDB,
+    );
   }
 
   Future _createDB(Database db, int version) async {
@@ -28,14 +33,25 @@ class DatabaseHelper {
         valor REAL NOT NULL,
         data TEXT NOT NULL,
         categoria TEXT NOT NULL,
-        tipo TEXT NOT NULL
+        tipo TEXT NOT NULL,
+        sincronizado INTEGER NOT NULL DEFAULT 0
       )
     ''');
   }
 
+  // Migração para quem já tinha o banco na versão 1 (sem sincronização).
+  Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute(
+        'ALTER TABLE transactions ADD COLUMN sincronizado INTEGER NOT NULL DEFAULT 0',
+      );
+    }
+  }
+
   Future<TransactionModel> insertTransaction(TransactionModel t) async {
     final db = await instance.database;
-    final id = await db.insert('transactions', t.toMap());
+    final map = t.toMap()..['sincronizado'] = 0;
+    final id = await db.insert('transactions', map);
     return t.copyWith(id: id);
   }
 
@@ -47,8 +63,8 @@ class DatabaseHelper {
 
   Future<int> updateTransaction(TransactionModel t) async {
     final db = await instance.database;
-    return db.update('transactions', t.toMap(),
-        where: 'id = ?', whereArgs: [t.id]);
+    final map = t.toMap()..['sincronizado'] = 0;
+    return db.update('transactions', map, where: 'id = ?', whereArgs: [t.id]);
   }
 
   Future<int> deleteTransaction(int id) async {
@@ -63,6 +79,50 @@ class DatabaseHelper {
       saldo += t.tipo == TransactionType.receita ? t.valor : -t.valor;
     }
     return saldo;
+  }
+
+  /// Transações que ainda não foram enviadas para o Firestore.
+  Future<List<TransactionModel>> getTransacoesNaoSincronizadas() async {
+    final db = await instance.database;
+    final result = await db.query(
+      'transactions',
+      where: 'sincronizado = 0',
+    );
+    return result.map((map) => TransactionModel.fromMap(map)).toList();
+  }
+
+  /// Marca uma transação como já sincronizada com a nuvem.
+  Future<void> marcarComoSincronizada(int id) async {
+    final db = await instance.database;
+    await db.update(
+      'transactions',
+      {'sincronizado': 1},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  /// Insere (ou substitui) uma transação vinda da nuvem, já marcando como
+  /// sincronizada. Usado ao restaurar dados de outro dispositivo.
+  Future<void> inserirTransacaoDaNuvem(TransactionModel t) async {
+    final db = await instance.database;
+    final map = t.toMap()..['sincronizado'] = 1;
+    await db.insert(
+      'transactions',
+      map,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<bool> existeTransacaoComId(int id) async {
+    final db = await instance.database;
+    final result = await db.query(
+      'transactions',
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    return result.isNotEmpty;
   }
 
   Future close() async {

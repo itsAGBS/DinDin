@@ -32,7 +32,7 @@ class TransactionModel {
     return TransactionModel(
       id: map['id'] as int?,
       descricao: map['descricao'] as String,
-      valor: map['valor'] as double,
+      valor: (map['valor'] as num).toDouble(),
       data: DateTime.parse(map['data'] as String),
       categoria: map['categoria'] as String,
       tipo: map['tipo'] == 'receita'

@@ -77,6 +77,19 @@ class TelaTesteBanco extends StatelessWidget {
         title: const Text('DinDin - Teste do banco'),
         actions: [
           IconButton(
+            icon: provider.syncStatus == SyncStatus.sincronizando
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.cloud_sync),
+            tooltip: 'Sincronizar agora',
+            onPressed: provider.syncStatus == SyncStatus.sincronizando
+                ? null
+                : () => provider.sincronizarComNuvem(),
+          ),
+          IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Sair',
             onPressed: () => auth.sair(),
@@ -92,6 +105,8 @@ class TelaTesteBanco extends StatelessWidget {
             const SizedBox(height: 12),
             Text('Saldo atual: R\$ ${provider.saldo.toStringAsFixed(2)}\n'
                 'Transacoes: ${provider.transacoes.length}'),
+            const SizedBox(height: 12),
+            Text(_descricaoStatus(provider.syncStatus)),
           ],
         ),
       ),
@@ -110,5 +125,18 @@ class TelaTesteBanco extends StatelessWidget {
         child: const Icon(Icons.add),
       ),
     );
+  }
+
+  String _descricaoStatus(SyncStatus status) {
+    switch (status) {
+      case SyncStatus.sincronizando:
+        return 'Sincronizando com a nuvem...';
+      case SyncStatus.sincronizado:
+        return 'Dados sincronizados com a nuvem';
+      case SyncStatus.erro:
+        return 'Sem conexão — dados salvos só localmente por enquanto';
+      case SyncStatus.desconectado:
+        return '';
+    }
   }
 }
