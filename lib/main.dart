@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
-
+import 'screens/dashboard_screen.dart';
 import 'firebase_options.dart';
 import 'models/transaction_model.dart';
 import 'providers/auth_provider.dart';
@@ -57,7 +57,7 @@ class AuthGate extends StatelessWidget {
       case AuthStatus.naoAutenticado:
         return const LoginScreen();
       case AuthStatus.autenticado:
-        return const TelaTesteBanco();
+        return const DashboardScreen();
     }
   }
 }
