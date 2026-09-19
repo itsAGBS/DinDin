@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../models/category_model.dart';
 import '../models/transaction_model.dart';
 import '../theme/app_colors.dart';
 
@@ -11,27 +12,6 @@ class TransacaoTile extends StatelessWidget {
 
   const TransacaoTile({super.key, required this.transacao, this.onTap});
 
-  IconData _iconePorCategoria(String categoria) {
-    switch (categoria) {
-      case 'Alimentação':
-        return Icons.restaurant_outlined;
-      case 'Transporte':
-        return Icons.directions_bus_outlined;
-      case 'Moradia':
-        return Icons.home_outlined;
-      case 'Lazer':
-        return Icons.sports_esports_outlined;
-      case 'Saúde':
-        return Icons.favorite_border;
-      case 'Educação':
-        return Icons.school_outlined;
-      case 'Salário':
-        return Icons.payments_outlined;
-      default:
-        return Icons.category_outlined;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final ehReceita = transacao.tipo == TransactionType.receita;
@@ -39,6 +19,7 @@ class TransacaoTile extends StatelessWidget {
     final sinal = ehReceita ? '+' : '-';
     final valorFormatado =
         'R\$ ${transacao.valor.abs().toStringAsFixed(2).replaceAll('.', ',')}';
+    final titulo = transacao.temDescricao ? transacao.descricao : transacao.categoria;
 
     return InkWell(
       onTap: onTap,
@@ -57,10 +38,10 @@ class TransacaoTile extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: cor.withOpacity(0.12),
+                color: cor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(_iconePorCategoria(transacao.categoria), color: cor, size: 22),
+              child: Icon(iconeDaCategoria(transacao.categoria), color: cor, size: 22),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -68,7 +49,7 @@ class TransacaoTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    transacao.descricao,
+                    titulo,
                     style: const TextStyle(
                       fontFamily: 'Poppins',
                       fontWeight: FontWeight.w600,
@@ -103,3 +84,4 @@ class TransacaoTile extends StatelessWidget {
     );
   }
 }
+
