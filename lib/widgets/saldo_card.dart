@@ -28,7 +28,7 @@ class SaldoCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: corFundo.withOpacity(0.25),
+            color: corFundo.withValues(alpha: 0.25),
             blurRadius: 16,
             offset: const Offset(0, 8),
           ),

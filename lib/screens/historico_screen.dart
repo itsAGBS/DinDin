@@ -5,6 +5,7 @@ import '../providers/transaction_provider.dart';
 import '../models/transaction_model.dart';
 import '../theme/app_colors.dart';
 import '../widgets/transacao_tile.dart';
+import 'transacao_form_screen.dart';
 
 /// Tela de histórico: listagem completa de transações cadastradas,
 /// ordenadas por data (mais recentes primeiro), com filtro opcional
@@ -18,6 +19,50 @@ class HistoricoScreen extends StatefulWidget {
 
 class _HistoricoScreenState extends State<HistoricoScreen> {
   TransactionType? _filtro; // null = todas
+
+  void _abrirCadastro(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const TransacaoFormScreen()),
+    );
+  }
+
+  void _abrirEdicao(BuildContext context, TransactionModel transacao) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => TransacaoFormScreen(transacaoExistente: transacao),
+      ),
+    );
+  }
+
+  Future<bool> _confirmarExclusao(BuildContext context, TransactionModel t) async {
+    final confirmou = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text(
+          'Excluir transação',
+          style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700),
+        ),
+        content: Text(
+          'Tem certeza que deseja excluir '
+          '"${t.temDescricao ? t.descricao : t.categoria}"? '
+          'Essa ação não pode ser desfeita.',
+          style: const TextStyle(fontFamily: 'Poppins'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar', style: TextStyle(fontFamily: 'Poppins')),
+          ),
+          FilledButton.tonal(
+            style: FilledButton.styleFrom(foregroundColor: AppColors.despesa),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Excluir', style: TextStyle(fontFamily: 'Poppins')),
+          ),
+        ],
+      ),
+    );
+    return confirmou ?? false;
+  }
 
   List<TransactionModel> _ordenarEFiltrar(List<TransactionModel> transacoes) {
     final lista = transacoes.where((t) {
@@ -112,13 +157,40 @@ class _HistoricoScreenState extends State<HistoricoScreen> {
                         ),
                       ),
                     ),
-                    ...entrada.value.map((t) => TransacaoTile(transacao: t)),
+                    ...entrada.value.map(
+                      (t) => Dismissible(
+                        key: ValueKey(t.id),
+                        direction: DismissDirection.endToStart,
+                        background: Container(
+                          margin: const EdgeInsets.symmetric(vertical: 6),
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          decoration: BoxDecoration(
+                            color: AppColors.despesa,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: const Icon(Icons.delete_outline, color: Colors.white),
+                        ),
+                        confirmDismiss: (_) => _confirmarExclusao(context, t),
+                        onDismissed: (_) =>
+                            context.read<TransactionProvider>().excluirTransacao(t.id!),
+                        child: TransacaoTile(
+                          transacao: t,
+                          onTap: () => _abrirEdicao(context, t),
+                        ),
+                      ),
+                    ),
                   ],
                 );
               }).toList(),
             ),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: AppColors.acao,
+        onPressed: () => _abrirCadastro(context),
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }

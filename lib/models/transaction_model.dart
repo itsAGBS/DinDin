@@ -10,12 +10,15 @@ class TransactionModel {
 
   TransactionModel({
     this.id,
-    required this.descricao,
+    String? descricao,
     required this.valor,
     required this.data,
     required this.categoria,
     required this.tipo,
-  });
+  }) : descricao = descricao?.trim() ?? '';
+
+  /// Descrição é opcional: true quando o usuário preencheu algo.
+  bool get temDescricao => descricao.trim().isNotEmpty;
 
   Map<String, dynamic> toMap() {
     return {
@@ -59,14 +62,3 @@ class TransactionModel {
     );
   }
 }
-
-const List<String> categoriasPadrao = [
-  'Alimentação',
-  'Transporte',
-  'Moradia',
-  'Lazer',
-  'Saúde',
-  'Educação',
-  'Salário',
-  'Outros',
-];

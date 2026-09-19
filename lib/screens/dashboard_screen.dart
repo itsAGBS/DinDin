@@ -6,6 +6,7 @@ import '../theme/app_colors.dart';
 import '../widgets/saldo_card.dart';
 import '../widgets/transacao_tile.dart';
 import 'historico_screen.dart';
+import 'transacao_form_screen.dart';
 
 /// Tela principal exibida ao abrir o app.
 /// Mostra saldo atual, últimas transações e acesso rápido
@@ -14,9 +15,19 @@ class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
 
   void _abrirFormulario(BuildContext context, TransactionType tipo) {
-    // TODO: navegar para a tela de cadastro (parte de outro integrante do grupo),
-    // passando o tipo pré-selecionado (receita ou despesa).
-    Navigator.of(context).pushNamed('/cadastro', arguments: tipo);
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => TransacaoFormScreen(tipoInicial: tipo),
+      ),
+    );
+  }
+
+  void _abrirEdicao(BuildContext context, TransactionModel transacao) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => TransacaoFormScreen(transacaoExistente: transacao),
+      ),
+    );
   }
 
   @override
@@ -111,7 +122,10 @@ class DashboardScreen extends StatelessWidget {
                 const _EstadoVazio()
               else
                 ...provider.ultimasTransacoes.map(
-                      (t) => TransacaoTile(transacao: t),
+                      (t) => TransacaoTile(
+                        transacao: t,
+                        onTap: () => _abrirEdicao(context, t),
+                      ),
                 ),
             ],
           ),
@@ -142,9 +156,9 @@ class _BotaoRapido extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
-          color: cor.withOpacity(0.10),
+          color: cor.withValues(alpha: 0.10),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: cor.withOpacity(0.35)),
+          border: Border.all(color: cor.withValues(alpha: 0.35)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
