@@ -7,6 +7,7 @@ import '../widgets/saldo_card.dart';
 import '../widgets/transacao_tile.dart';
 import 'historico_screen.dart';
 import 'transacao_form_screen.dart';
+import 'configurar_bloqueio_screen.dart';
 
 /// Tela principal exibida ao abrir o app.
 /// Mostra saldo atual, últimas transações e acesso rápido
@@ -36,6 +37,23 @@ class DashboardScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.fundo,
+      appBar: AppBar(
+        backgroundColor: AppColors.fundo,
+        elevation: 0,
+        title: const Text(
+          'DinDin',
+          style: TextStyle(fontFamily: 'Poppins', color: Colors.black87),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.lock_outline, color: Colors.black54),
+            tooltip: 'Segurança',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const ConfigurarBloqueioScreen()),
+            ),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: provider.carregando
             ? const Center(child: CircularProgressIndicator())

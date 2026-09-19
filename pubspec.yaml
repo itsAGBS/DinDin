@@ -50,6 +50,11 @@ dependencies:
   cupertino_icons: ^1.0.8
   intl: ^0.20.3
 
+  # Bloqueio por biometria/PIN (minha parte)
+  local_auth: ^2.3.0
+  flutter_secure_storage: ^9.2.2
+  crypto: ^3.0.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
