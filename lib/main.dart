@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'screens/dashboard_screen.dart';
 import 'firebase_options.dart';
-import 'models/transaction_model.dart';
 import 'providers/auth_provider.dart';
 import 'providers/transaction_provider.dart';
 import 'screens/login_screen.dart';
@@ -58,85 +57,6 @@ class AuthGate extends StatelessWidget {
         return const LoginScreen();
       case AuthStatus.autenticado:
         return const DashboardScreen();
-    }
-  }
-}
-
-// Tela temporaria so para testar se o banco de dados local esta funcionando.
-// Sera substituida pelo Dashboard de verdade.
-class TelaTesteBanco extends StatelessWidget {
-  const TelaTesteBanco({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final provider = context.watch<TransactionProvider>();
-    final auth = context.watch<AuthProvider>();
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('DinDin - Teste do banco'),
-        actions: [
-          IconButton(
-            icon: provider.syncStatus == SyncStatus.sincronizando
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.cloud_sync),
-            tooltip: 'Sincronizar agora',
-            onPressed: provider.syncStatus == SyncStatus.sincronizando
-                ? null
-                : () => provider.sincronizarComNuvem(),
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Sair',
-            onPressed: () => auth.sair(),
-          ),
-        ],
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (auth.user?.email != null)
-              Text('Logado como: ${auth.user!.email}'),
-            const SizedBox(height: 12),
-            Text('Saldo atual: R\$ ${provider.saldo.toStringAsFixed(2)}\n'
-                'Transacoes: ${provider.transacoes.length}'),
-            const SizedBox(height: 12),
-            Text(_descricaoStatus(provider.syncStatus)),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          context.read<TransactionProvider>().adicionarTransacao(
-            TransactionModel(
-              descricao: 'Teste',
-              valor: 50,
-              data: DateTime.now(),
-              categoria: 'Outros',
-              tipo: TransactionType.despesa,
-            ),
-          );
-        },
-        child: const Icon(Icons.add),
-      ),
-    );
-  }
-
-  String _descricaoStatus(SyncStatus status) {
-    switch (status) {
-      case SyncStatus.sincronizando:
-        return 'Sincronizando com a nuvem...';
-      case SyncStatus.sincronizado:
-        return 'Dados sincronizados com a nuvem';
-      case SyncStatus.erro:
-        return 'Sem conexão — dados salvos só localmente por enquanto';
-      case SyncStatus.desconectado:
-        return '';
     }
   }
 }
