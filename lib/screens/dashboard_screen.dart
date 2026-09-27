@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:io';
 import '../providers/transaction_provider.dart';
+import '../providers/auth_provider.dart';
 import '../models/transaction_model.dart';
 import '../theme/app_colors.dart';
 import '../widgets/saldo_card.dart';
@@ -8,6 +10,7 @@ import '../widgets/transacao_tile.dart';
 import 'historico_screen.dart';
 import 'transacao_form_screen.dart';
 import 'configurar_bloqueio_screen.dart';
+import 'perfil_screen.dart';
 
 /// Tela principal exibida ao abrir o app.
 /// Mostra saldo atual, últimas transações e acesso rápido
@@ -34,12 +37,39 @@ class DashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<TransactionProvider>();
+    final auth = context.watch<AuthProvider>();
+    final user = auth.user;
+
+    ImageProvider? imagemAvatar;
+    if (auth.fotoLocalPath != null) {
+      imagemAvatar = FileImage(File(auth.fotoLocalPath!));
+    } else if (user?.photoURL != null) {
+      imagemAvatar = NetworkImage(user!.photoURL!);
+    }
 
     return Scaffold(
       backgroundColor: AppColors.fundo,
       appBar: AppBar(
         backgroundColor: AppColors.fundo,
         elevation: 0,
+        leadingWidth: 56,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 16),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(20),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const PerfilScreen()),
+            ),
+            child: CircleAvatar(
+              radius: 18,
+              backgroundColor: AppColors.destaque,
+              backgroundImage: imagemAvatar,
+              child: imagemAvatar == null
+                  ? const Icon(Icons.person, color: Colors.white, size: 20)
+                  : null,
+            ),
+          ),
+        ),
         title: const Text(
           'DinDin',
           style: TextStyle(fontFamily: 'Poppins', color: Colors.black87),

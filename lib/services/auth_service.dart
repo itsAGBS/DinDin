@@ -90,6 +90,46 @@ class AuthService {
     }
   }
 
+  /// Atualiza o nome de exibição do usuário logado.
+  Future<void> atualizarNome(String nome) async {
+    final user = _firebaseAuth.currentUser;
+    if (user == null) throw AuthException('Nenhum usuário logado.');
+
+    try {
+      await user.updateDisplayName(nome.trim());
+      await user.reload();
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(_mensagemDeErro(e.code));
+    }
+  }
+
+  /// Troca a senha do usuário logado. O Firebase exige uma
+  /// reautenticação recente antes de aceitar a troca, por isso pedimos a
+  /// senha atual e reautenticamos antes de chamar `updatePassword`.
+  ///
+  /// Só se aplica a contas criadas com e-mail/senha — contas via Google
+  /// não têm senha própria no DinDin (ver [temSenha] no AuthProvider).
+  Future<void> alterarSenha({
+    required String senhaAtual,
+    required String novaSenha,
+  }) async {
+    final user = _firebaseAuth.currentUser;
+    if (user == null || user.email == null) {
+      throw AuthException('Nenhum usuário logado.');
+    }
+
+    try {
+      final credential = EmailAuthProvider.credential(
+        email: user.email!,
+        password: senhaAtual,
+      );
+      await user.reauthenticateWithCredential(credential);
+      await user.updatePassword(novaSenha);
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(_mensagemDeErro(e.code));
+    }
+  }
+
   /// Faz logout de qualquer provedor (e-mail/senha ou Google).
   Future<void> sair() async {
     await Future.wait([
@@ -99,7 +139,7 @@ class AuthService {
   }
 
   /// Traduz os códigos de erro do FirebaseAuth para mensagens em português,
-  /// amigáveis para exibir na tela de login/cadastro.
+  /// amigáveis para exibir na tela de login/cadastro/perfil.
   String _mensagemDeErro(String code) {
     switch (code) {
       case 'invalid-email':
@@ -110,11 +150,13 @@ class AuthService {
         return 'Não existe conta com este e-mail.';
       case 'wrong-password':
       case 'invalid-credential':
-        return 'E-mail ou senha incorretos.';
+        return 'Senha atual incorreta.';
       case 'email-already-in-use':
         return 'Já existe uma conta com este e-mail.';
       case 'weak-password':
         return 'A senha precisa ter pelo menos 6 caracteres.';
+      case 'requires-recent-login':
+        return 'Por segurança, saia e entre novamente antes de repetir essa ação.';
       case 'network-request-failed':
         return 'Falha de conexão. Verifique sua internet.';
       case 'too-many-requests':
