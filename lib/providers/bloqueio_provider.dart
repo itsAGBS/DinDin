@@ -2,21 +2,16 @@ import 'package:flutter/widgets.dart';
 
 import '../services/bloqueio_service.dart';
 
-/// Estado da proteção de acesso ao app.
 enum StatusBloqueio {
-  /// Ainda carregando as preferências salvas no dispositivo.
+
   carregando,
 
-  /// Bloqueio desligado nas configurações — app abre direto no dashboard.
   desativado,
 
-  /// Bloqueio ligado e aguardando o usuário se autenticar.
   bloqueado,
 
-  /// Bloqueio ligado e usuário já autenticado nesta sessão do app.
   desbloqueado,
 }
-
 
 class BloqueioProvider extends ChangeNotifier with WidgetsBindingObserver {
   BloqueioProvider({BloqueioService? service})
@@ -56,8 +51,6 @@ class BloqueioProvider extends ChangeNotifier with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (!bloqueioAtivado) return;
 
-    // Assim que o app vai para segundo plano, exige autenticação de novo na próxima vez em que for exibido.
-    
     final foiParaSegundoPlano = state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive ||
         state == AppLifecycleState.hidden;
@@ -98,8 +91,6 @@ class BloqueioProvider extends ChangeNotifier with WidgetsBindingObserver {
     return correto;
   }
 
-  /// Ativa a proteção do app definindo um PIN novo. A biometria pode ser ligada depois, separadamente, se o aparelho suportar.
-  
   Future<void> ativarComPin(String pin) async {
     await _service.configurarPin(pin);
     await _service.definirBloqueioAtivado(true);
@@ -139,3 +130,4 @@ class BloqueioProvider extends ChangeNotifier with WidgetsBindingObserver {
     super.dispose();
   }
 }
+

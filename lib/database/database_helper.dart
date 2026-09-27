@@ -39,7 +39,6 @@ class DatabaseHelper {
     ''');
   }
 
-  // Migração para quem já tinha o banco na versão 1 (sem sincronização).
   Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await db.execute(
@@ -81,7 +80,6 @@ class DatabaseHelper {
     return saldo;
   }
 
-  /// Transações que ainda não foram enviadas para o Firestore.
   Future<List<TransactionModel>> getTransacoesNaoSincronizadas() async {
     final db = await instance.database;
     final result = await db.query(
@@ -91,7 +89,6 @@ class DatabaseHelper {
     return result.map((map) => TransactionModel.fromMap(map)).toList();
   }
 
-  /// Marca uma transação como já sincronizada com a nuvem.
   Future<void> marcarComoSincronizada(int id) async {
     final db = await instance.database;
     await db.update(
@@ -102,8 +99,6 @@ class DatabaseHelper {
     );
   }
 
-  /// Insere (ou substitui) uma transação vinda da nuvem, já marcando como
-  /// sincronizada. Usado ao restaurar dados de outro dispositivo.
   Future<void> inserirTransacaoDaNuvem(TransactionModel t) async {
     final db = await instance.database;
     final map = t.toMap()..['sincronizado'] = 1;
@@ -130,3 +125,4 @@ class DatabaseHelper {
     db.close();
   }
 }
+

@@ -49,6 +49,7 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   intl: ^0.20.3
+  google_fonts: ^6.2.1
 
   # Bloqueio por biometria/PIN (minha parte)
   local_auth: ^2.3.0

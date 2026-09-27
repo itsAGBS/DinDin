@@ -17,7 +17,6 @@ class TransactionModel {
     required this.tipo,
   }) : descricao = descricao?.trim() ?? '';
 
-  /// Descrição é opcional: true quando o usuário preencheu algo.
   bool get temDescricao => descricao.trim().isNotEmpty;
 
   Map<String, dynamic> toMap() {
@@ -62,3 +61,4 @@ class TransactionModel {
     );
   }
 }
+

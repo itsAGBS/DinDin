@@ -7,8 +7,6 @@ import '../services/auth_service.dart';
 
 enum AuthStatus { carregando, autenticado, naoAutenticado }
 
-/// Expõe o estado de autenticação (usuário logado, carregando, erro) para
-/// as telas via [Provider], escondendo os detalhes do Firebase.
 class AuthProvider extends ChangeNotifier {
   AuthProvider({AuthService? authService})
       : _authService = authService ?? AuthService() {
@@ -64,8 +62,6 @@ class AuthProvider extends ChangeNotifier {
     await _authService.sair();
   }
 
-  /// Roda uma operação assíncrona de auth, cuidando de estado de
-  /// carregamento e captura de erro de forma padronizada.
   Future<bool> _executar(Future<void> Function() acao) async {
     _processando = true;
     _erro = null;
@@ -100,3 +96,4 @@ class AuthProvider extends ChangeNotifier {
     super.dispose();
   }
 }
+

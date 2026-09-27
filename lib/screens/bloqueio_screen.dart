@@ -7,9 +7,6 @@ import '../theme/app_colors.dart';
 
 const _tamanhoPin = 4;
 
-/// Tela de bloqueio exibida sempre que o app é aberto (ou volta do segundo plano) com a proteção ativada.
-/// Pede biometria automaticamente quando disponível, com o PIN numérico como alternativa.
-
 class BloqueioScreen extends StatefulWidget {
   const BloqueioScreen({super.key});
 
@@ -33,7 +30,7 @@ class _BloqueioScreenState extends State<BloqueioScreen> {
 
     final bloqueio = context.read<BloqueioProvider>();
     if (bloqueio.biometriaAtivada && bloqueio.biometriaDisponivelNoAparelho) {
-      // Espera o primeiro frame terminar antes de abrir o prompt nativo.
+
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) context.read<BloqueioProvider>().desbloquearComBiometria();
       });
@@ -128,16 +125,18 @@ class _BloqueioScreenState extends State<BloqueioScreen> {
               const SizedBox(height: 12),
               SizedBox(
                 height: 20,
-                child: bloqueio.erro != null
-                    ? Text(
-                        bloqueio.erro!,
-                        style: const TextStyle(
-                          fontFamily: 'Poppins',
-                          color: AppColors.alerta,
-                          fontSize: 13,
-                        ),
-                      )
-                    : null,
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 200),
+                  opacity: bloqueio.erro != null ? 1 : 0,
+                  child: Text(
+                    bloqueio.erro ?? '',
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      color: AppColors.alerta,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
               ),
               const SizedBox(height: 16),
               _TecladoNumerico(
@@ -185,13 +184,23 @@ class _IndicadorPin extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(total, (i) {
         final ativo = i < preenchidos;
-        return Container(
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          curve: Curves.easeOut,
           margin: const EdgeInsets.symmetric(horizontal: 6),
-          width: 14,
-          height: 14,
+          width: ativo ? 16 : 14,
+          height: ativo ? 16 : 14,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: ativo ? Colors.white : Colors.white24,
+            boxShadow: ativo
+                ? [
+                    BoxShadow(
+                      color: Colors.white.withValues(alpha: 0.4),
+                      blurRadius: 6,
+                    ),
+                  ]
+                : null,
           ),
         );
       }),
@@ -271,19 +280,26 @@ class _BotaoTecla extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: habilitado ? onTap : null,
-      borderRadius: BorderRadius.circular(32),
-      child: Container(
-        width: 64,
-        height: 64,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: Colors.white.withValues(alpha: 0.08),
+    return Material(
+      color: Colors.transparent,
+      shape: const CircleBorder(),
+      child: InkWell(
+        onTap: habilitado ? onTap : null,
+        customBorder: const CircleBorder(),
+        splashColor: Colors.white.withValues(alpha: 0.18),
+        highlightColor: Colors.white.withValues(alpha: 0.12),
+        child: Container(
+          width: 64,
+          height: 64,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white.withValues(alpha: 0.08),
+          ),
+          child: child,
         ),
-        child: child,
       ),
     );
   }
 }
+

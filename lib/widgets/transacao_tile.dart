@@ -4,8 +4,6 @@ import '../models/category_model.dart';
 import '../models/transaction_model.dart';
 import '../theme/app_colors.dart';
 
-/// Item de lista usado tanto no dashboard (últimas transações)
-/// quanto na tela de histórico completo.
 class TransacaoTile extends StatelessWidget {
   final TransactionModel transacao;
   final VoidCallback? onTap;
@@ -14,8 +12,9 @@ class TransacaoTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cores = context.cores;
     final ehReceita = transacao.tipo == TransactionType.receita;
-    final cor = ehReceita ? AppColors.receita : AppColors.despesa;
+    final cor = ehReceita ? cores.receita : cores.despesa;
     final sinal = ehReceita ? '+' : '-';
     final valorFormatado =
         'R\$ ${transacao.valor.abs().toStringAsFixed(2).replaceAll('.', ',')}';
@@ -24,13 +23,22 @@ class TransacaoTile extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
+      splashColor: cor.withValues(alpha: 0.10),
+      highlightColor: cor.withValues(alpha: 0.05),
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 6),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cores.cardFundo,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE5E9F0)),
+          border: Border.all(color: cores.borda),
+          boxShadow: [
+            BoxShadow(
+              color: cores.sombra,
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         child: Row(
           children: [
@@ -50,20 +58,21 @@ class TransacaoTile extends StatelessWidget {
                 children: [
                   Text(
                     titulo,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'Poppins',
                       fontWeight: FontWeight.w600,
                       fontSize: 15,
+                      color: cores.textoPrincipal,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 2),
                   Text(
                     '${transacao.categoria} • ${DateFormat('dd/MM/yyyy').format(transacao.data)}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 12,
-                      color: Colors.black54,
+                      color: cores.textoSecundario,
                     ),
                   ),
                 ],
@@ -84,4 +93,3 @@ class TransacaoTile extends StatelessWidget {
     );
   }
 }
-

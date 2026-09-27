@@ -4,12 +4,11 @@ import 'package:provider/provider.dart';
 import '../providers/transaction_provider.dart';
 import '../models/transaction_model.dart';
 import '../theme/app_colors.dart';
+import '../utils/page_transitions.dart';
+import '../widgets/estado_vazio.dart';
 import '../widgets/transacao_tile.dart';
 import 'transacao_form_screen.dart';
 
-/// Tela de histórico: listagem completa de transações cadastradas,
-/// ordenadas por data (mais recentes primeiro), com filtro opcional
-/// por tipo (todas / receitas / despesas).
 class HistoricoScreen extends StatefulWidget {
   const HistoricoScreen({super.key});
 
@@ -18,23 +17,22 @@ class HistoricoScreen extends StatefulWidget {
 }
 
 class _HistoricoScreenState extends State<HistoricoScreen> {
-  TransactionType? _filtro; // null = todas
+  TransactionType? _filtro;
 
   void _abrirCadastro(BuildContext context) {
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const TransacaoFormScreen()),
+      rotaComTransicaoSuave(const TransacaoFormScreen()),
     );
   }
 
   void _abrirEdicao(BuildContext context, TransactionModel transacao) {
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => TransacaoFormScreen(transacaoExistente: transacao),
-      ),
+      rotaComTransicaoSuave(TransacaoFormScreen(transacaoExistente: transacao)),
     );
   }
 
   Future<bool> _confirmarExclusao(BuildContext context, TransactionModel t) async {
+    final cores = context.cores;
     final confirmou = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -54,7 +52,7 @@ class _HistoricoScreenState extends State<HistoricoScreen> {
             child: const Text('Cancelar', style: TextStyle(fontFamily: 'Poppins')),
           ),
           FilledButton.tonal(
-            style: FilledButton.styleFrom(foregroundColor: AppColors.despesa),
+            style: FilledButton.styleFrom(foregroundColor: cores.despesa),
             onPressed: () => Navigator.of(context).pop(true),
             child: const Text('Excluir', style: TextStyle(fontFamily: 'Poppins')),
           ),
@@ -70,7 +68,7 @@ class _HistoricoScreenState extends State<HistoricoScreen> {
       return t.tipo == _filtro;
     }).toList();
 
-    lista.sort((a, b) => b.data.compareTo(a.data)); // mais recentes primeiro
+    lista.sort((a, b) => b.data.compareTo(a.data));
     return lista;
   }
 
@@ -83,18 +81,26 @@ class _HistoricoScreenState extends State<HistoricoScreen> {
     return grupos;
   }
 
+  String _rotuloData(String chave, DateTime dataDoGrupo) {
+    final hoje = DateTime.now();
+    final ontem = hoje.subtract(const Duration(days: 1));
+    bool mesmoDia(DateTime a, DateTime b) =>
+        a.year == b.year && a.month == b.month && a.day == b.day;
+
+    if (mesmoDia(dataDoGrupo, hoje)) return 'Hoje';
+    if (mesmoDia(dataDoGrupo, ontem)) return 'Ontem';
+    return chave;
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<TransactionProvider>();
+    final cores = context.cores;
     final transacoes = _ordenarEFiltrar(provider.transacoes);
     final grupos = _agruparPorDia(transacoes);
 
     return Scaffold(
-      backgroundColor: AppColors.fundo,
       appBar: AppBar(
-        backgroundColor: AppColors.fundo,
-        elevation: 0,
-        foregroundColor: Colors.black87,
         title: const Text(
           'Histórico',
           style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700),
@@ -111,21 +117,21 @@ class _HistoricoScreenState extends State<HistoricoScreen> {
                 _ChipFiltro(
                   label: 'Todas',
                   selecionado: _filtro == null,
-                  cor: AppColors.destaque,
+                  cor: cores.saldoDestaqueFundo,
                   onTap: () => setState(() => _filtro = null),
                 ),
                 const SizedBox(width: 8),
                 _ChipFiltro(
                   label: 'Receitas',
                   selecionado: _filtro == TransactionType.receita,
-                  cor: AppColors.receita,
+                  cor: cores.receita,
                   onTap: () => setState(() => _filtro = TransactionType.receita),
                 ),
                 const SizedBox(width: 8),
                 _ChipFiltro(
                   label: 'Despesas',
                   selecionado: _filtro == TransactionType.despesa,
-                  cor: AppColors.despesa,
+                  cor: cores.despesa,
                   onTap: () => setState(() => _filtro = TransactionType.despesa),
                 ),
               ],
@@ -133,12 +139,13 @@ class _HistoricoScreenState extends State<HistoricoScreen> {
           ),
           Expanded(
             child: transacoes.isEmpty
-                ? const Center(
-              child: Text(
-                'Nenhuma transação encontrada',
-                style: TextStyle(fontFamily: 'Poppins', color: Colors.black45),
-              ),
-            )
+                ? EstadoVazio(
+                    icone: Icons.search_off_rounded,
+                    titulo: 'Nenhuma transação encontrada',
+                    subtitulo: _filtro == null
+                        ? 'Cadastre sua primeira transação'
+                        : 'Tente outro filtro ou cadastre uma nova',
+                  )
                 : ListView(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
               children: grupos.entries.map((entrada) {
@@ -148,12 +155,12 @@ class _HistoricoScreenState extends State<HistoricoScreen> {
                     Padding(
                       padding: const EdgeInsets.only(top: 12, bottom: 4),
                       child: Text(
-                        entrada.key,
-                        style: const TextStyle(
+                        _rotuloData(entrada.key, entrada.value.first.data),
+                        style: TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: Colors.black45,
+                          color: cores.textoSecundario,
                         ),
                       ),
                     ),
@@ -166,7 +173,7 @@ class _HistoricoScreenState extends State<HistoricoScreen> {
                           alignment: Alignment.centerRight,
                           padding: const EdgeInsets.symmetric(horizontal: 20),
                           decoration: BoxDecoration(
-                            color: AppColors.despesa,
+                            color: cores.despesa,
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: const Icon(Icons.delete_outline, color: Colors.white),
@@ -188,7 +195,8 @@ class _HistoricoScreenState extends State<HistoricoScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.acao,
+        backgroundColor: cores.azul,
+        elevation: 3,
         onPressed: () => _abrirCadastro(context),
         child: const Icon(Icons.add, color: Colors.white),
       ),
@@ -211,24 +219,30 @@ class _ChipFiltro extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: selecionado ? cor : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: selecionado ? cor : const Color(0xFFE5E9F0)),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: selecionado ? Colors.white : Colors.black54,
+    final cores = context.cores;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        splashColor: cor.withValues(alpha: 0.12),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: selecionado ? cor : cores.cardFundo,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: selecionado ? cor : cores.borda),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: selecionado ? Colors.white : cores.textoSecundario,
+            ),
           ),
         ),
       ),

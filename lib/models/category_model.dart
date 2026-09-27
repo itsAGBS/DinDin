@@ -2,12 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'transaction_model.dart';
 
-/// Categoria usada para classificar uma transação.
-///
-/// Cada categoria pertence a um único [tipo] (receita ou despesa) — por
-/// exemplo, "Salário" só faz sentido como receita, "Alimentação" só como
-/// despesa. O ícone é usado tanto no seletor do formulário de cadastro
-/// quanto na lista de transações ([TransacaoTile]).
 @immutable
 class CategoryModel {
   final String nome;
@@ -28,7 +22,6 @@ class CategoryModel {
   int get hashCode => Object.hash(nome, tipo);
 }
 
-/// Categorias padrão de despesa.
 const List<CategoryModel> categoriasDespesa = [
   CategoryModel(
     nome: 'Alimentação',
@@ -77,7 +70,6 @@ const List<CategoryModel> categoriasDespesa = [
   ),
 ];
 
-/// Categorias padrão de receita.
 const List<CategoryModel> categoriasReceita = [
   CategoryModel(
     nome: 'Salário',
@@ -111,15 +103,10 @@ const List<CategoryModel> categoriasPadrao = [
   ...categoriasReceita,
 ];
 
-/// Categorias disponíveis para o [tipo] informado, usadas para montar o
-/// seletor no formulário de cadastro/edição de transação.
 List<CategoryModel> categoriasPorTipo(TransactionType tipo) {
   return tipo == TransactionType.despesa ? categoriasDespesa : categoriasReceita;
 }
 
-/// Ícone correspondente ao nome de uma categoria (usado na listagem de
-/// transações). Cai num ícone genérico caso a categoria não seja mais
-/// reconhecida (ex: dado antigo salvo antes de uma mudança na lista).
 IconData iconeDaCategoria(String nome) {
   return categoriasPadrao
       .firstWhere(
@@ -132,3 +119,4 @@ IconData iconeDaCategoria(String nome) {
       )
       .icone;
 }
+
