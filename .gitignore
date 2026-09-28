@@ -27,3 +27,11 @@ doc/api/
 
 .flutter-plugins
 .flutter-plugins-dependencies
+
+# Android Studio / IntelliJ
+*.iml
+.idea/
+android/.kotlin/
+
+# Kotlin
+.kotlin/
