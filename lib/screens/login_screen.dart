@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../theme/app_colors.dart';
 import '../utils/page_transitions.dart';
+import '../widgets/dindin_logo.dart';
 import 'cadastro_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -91,31 +92,8 @@ class _LoginScreenState extends State<LoginScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Container(
-                  width: 72,
-                  height: 72,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: cores.azul.withValues(alpha: 0.10),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.savings_rounded,
-                    size: 36,
-                    color: cores.azul,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'DinDin',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.w700,
-                    color: cores.textoPrincipal,
-                  ),
-                ),
-                const SizedBox(height: 4),
+                const Center(child: DinDinLogo(markSize: 64)),
+                const SizedBox(height: 12),
                 Text(
                   'Entre para continuar',
                   textAlign: TextAlign.center,

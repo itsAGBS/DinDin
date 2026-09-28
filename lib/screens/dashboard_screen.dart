@@ -4,6 +4,7 @@ import '../providers/transaction_provider.dart';
 import '../models/transaction_model.dart';
 import '../theme/app_colors.dart';
 import '../utils/page_transitions.dart';
+import '../widgets/dindin_logo.dart';
 import '../widgets/estado_vazio.dart';
 import '../widgets/saldo_card.dart';
 import '../widgets/transacao_tile.dart';
@@ -33,9 +34,10 @@ class DashboardScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'DinDin',
-          style: TextStyle(fontFamily: 'Poppins', color: cores.textoPrincipal),
+        centerTitle: false,
+        title: const Align(
+          alignment: Alignment.centerLeft,
+          child: DinDinMark(size: 34),
         ),
         actions: [
           IconButton(
@@ -55,26 +57,6 @@ class DashboardScreen extends StatelessWidget {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
             children: [
-              Text(
-                'Olá! 👋',
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                  color: cores.textoPrincipal,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Aqui está o resumo das suas finanças',
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 14,
-                  color: cores.textoSecundario,
-                ),
-              ),
-              const SizedBox(height: 16),
-
               SaldoCard(saldo: provider.saldo),
               const SizedBox(height: 16),
 
