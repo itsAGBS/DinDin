@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 
-/// Card de destaque que mostra o saldo atual.
-/// A cor de fundo muda de acordo com o valor do saldo:
-/// vermelho (negativo), verde (positivo) ou navy neutro (zerado).
 class SaldoCard extends StatelessWidget {
   final double saldo;
 
@@ -17,15 +14,22 @@ class SaldoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final corFundo = AppColors.corDoSaldo(saldo);
+    final cores = context.cores;
+    final corFundo = cores.corDoSaldo(saldo);
+    final neutro = saldo == 0;
     final positivo = saldo >= 0;
 
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOut,
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: corFundo,
         borderRadius: BorderRadius.circular(20),
+        border: neutro && cores.saldoDestaqueBorda != null
+            ? Border.all(color: cores.saldoDestaqueBorda!)
+            : null,
         boxShadow: [
           BoxShadow(
             color: corFundo.withValues(alpha: 0.25),
@@ -49,10 +53,17 @@ class SaldoCard extends StatelessWidget {
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              Icon(
-                positivo ? Icons.trending_up : Icons.trending_down,
-                color: Colors.white70,
-                size: 20,
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  positivo ? Icons.trending_up : Icons.trending_down,
+                  color: Colors.white,
+                  size: 18,
+                ),
               ),
             ],
           ),

@@ -5,8 +5,6 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
 
-/// biometria (via `local_auth`) e PIN numérico.
-
 class BloqueioService {
   BloqueioService({
     LocalAuthentication? localAuth,
@@ -22,11 +20,6 @@ class BloqueioService {
   static const _chavePinHash = 'bloqueio_pin_hash';
   static const _chavePinSalt = 'bloqueio_pin_salt';
 
-
-  // Biometria
-
-  /// Verifica se o aparelho tem hardware de biometria e se há alguma biometria (digital, rosto etc.) cadastrada no aparelho.
-  
   Future<bool> biometriaDisponivel() async {
     try {
       final suportado = await _localAuth.isDeviceSupported();
@@ -37,8 +30,6 @@ class BloqueioService {
     }
   }
 
-  /// Abre o prompt nativo de biometria do sistema (digital/rosto).
- 
   Future<bool> autenticarComBiometria() async {
     try {
       return await _localAuth.authenticate(
@@ -52,8 +43,6 @@ class BloqueioService {
       return false;
     }
   }
-
-  // Configuração de bloqueio (ativo/inativo)
 
   Future<bool> bloqueioEstaAtivado() async {
     return (await _storage.read(key: _chaveBloqueioAtivado)) == 'true';
@@ -77,14 +66,10 @@ class BloqueioService {
     );
   }
 
-  // PIN numérico
-
   Future<bool> pinConfigurado() async {
     return (await _storage.read(key: _chavePinHash)) != null;
   }
 
-  /// Cria (ou substitui) o PIN do usuário.
-  
   Future<void> configurarPin(String pin) async {
     final salt = _gerarSalt();
     final hash = _hashPin(pin, salt);
@@ -104,8 +89,6 @@ class BloqueioService {
     await _storage.delete(key: _chavePinSalt);
   }
 
-  /// Remove toda a configuração de bloqueio (usado ao desativar a proteção por completo nas configurações).
-  
   Future<void> limparConfiguracao() async {
     await Future.wait([
       _storage.delete(key: _chaveBloqueioAtivado),
@@ -125,3 +108,4 @@ class BloqueioService {
     return digest.toString();
   }
 }
+

@@ -5,8 +5,6 @@ import 'package:provider/provider.dart';
 import '../providers/bloqueio_provider.dart';
 import '../theme/app_colors.dart';
 
-/// Tela de configuração da proteção de acesso. Acessada a partir do dashboard (ícone de cadeado na AppBar).
-
 class ConfigurarBloqueioScreen extends StatelessWidget {
   const ConfigurarBloqueioScreen({super.key});
 
@@ -55,8 +53,6 @@ class ConfigurarBloqueioScreen extends StatelessWidget {
     }
   }
 
-  /// Pede um PIN de 4 dígitos duas vezes (criação + confirmação).
-  
   Future<String?> _pedirNovoPin(BuildContext context) {
     return showDialog<String>(
       context: context,
@@ -70,7 +66,6 @@ class ConfigurarBloqueioScreen extends StatelessWidget {
     final bloqueio = context.watch<BloqueioProvider>();
 
     return Scaffold(
-      backgroundColor: AppColors.fundo,
       appBar: AppBar(title: const Text('Segurança')),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -127,8 +122,6 @@ class ConfigurarBloqueioScreen extends StatelessWidget {
   }
 }
 
-/// Dialogo que pede um PIN de 4 dígitos e a confirmação,
-/// só fechando com sucesso quando as duas digitações são idênticas.
 class _DialogoNovoPin extends StatefulWidget {
   const _DialogoNovoPin();
 
@@ -189,7 +182,7 @@ class _DialogoNovoPinState extends State<_DialogoNovoPin> {
           ),
           if (_erro != null) ...[
             const SizedBox(height: 4),
-            Text(_erro!, style: const TextStyle(color: Colors.red, fontSize: 12)),
+            Text(_erro!, style: TextStyle(color: context.cores.despesa, fontSize: 12)),
           ],
         ],
       ),
@@ -206,3 +199,4 @@ class _DialogoNovoPinState extends State<_DialogoNovoPin> {
     );
   }
 }
+

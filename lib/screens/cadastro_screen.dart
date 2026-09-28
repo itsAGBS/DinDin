@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/auth_provider.dart';
+import '../theme/app_colors.dart';
 
 class CadastroScreen extends StatefulWidget {
   const CadastroScreen({super.key});
@@ -40,14 +41,12 @@ class _CadastroScreenState extends State<CadastroScreen> {
     if (!mounted) return;
 
     if (sucesso) {
-      // O AuthProvider já detecta o login via authStateChanges e o
-      // AuthGate no main.dart troca de tela automaticamente.
       Navigator.of(context).pop();
     } else if (auth.erro != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(auth.erro!),
-          backgroundColor: Colors.red.shade700,
+          backgroundColor: context.cores.despesa,
         ),
       );
     }
@@ -56,6 +55,7 @@ class _CadastroScreenState extends State<CadastroScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+    final cores = context.cores;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Criar conta')),
@@ -63,106 +63,156 @@ class _CadastroScreenState extends State<CadastroScreen> {
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  TextFormField(
-                    controller: _nomeController,
-                    decoration: const InputDecoration(
-                      labelText: 'Nome',
-                      prefixIcon: Icon(Icons.person_outline),
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (valor) {
-                      if (valor == null || valor.trim().isEmpty) {
-                        return 'Digite seu nome';
-                      }
-                      return null;
-                    },
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: cores.azul.withValues(alpha: 0.10),
+                    shape: BoxShape.circle,
                   ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
-                      labelText: 'E-mail',
-                      prefixIcon: Icon(Icons.email_outlined),
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (valor) {
-                      if (valor == null || valor.trim().isEmpty) {
-                        return 'Digite seu e-mail';
-                      }
-                      if (!valor.contains('@') || !valor.contains('.')) {
-                        return 'E-mail inválido';
-                      }
-                      return null;
-                    },
+                  child: Icon(
+                    Icons.person_add_alt_1_rounded,
+                    size: 30,
+                    color: cores.azul,
                   ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _senhaController,
-                    obscureText: !_senhaVisivel,
-                    decoration: InputDecoration(
-                      labelText: 'Senha',
-                      prefixIcon: const Icon(Icons.lock_outline),
-                      border: const OutlineInputBorder(),
-                      suffixIcon: IconButton(
-                        icon: Icon(_senhaVisivel
-                            ? Icons.visibility_off
-                            : Icons.visibility),
-                        onPressed: () =>
-                            setState(() => _senhaVisivel = !_senhaVisivel),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Crie sua conta',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: cores.textoPrincipal,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Leva menos de um minuto',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 13, color: cores.textoSecundario),
+                ),
+                const SizedBox(height: 24),
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: cores.cardFundo,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: cores.sombra,
+                        blurRadius: 20,
+                        offset: const Offset(0, 8),
                       ),
-                    ),
-                    validator: (valor) {
-                      if (valor == null || valor.isEmpty) {
-                        return 'Digite uma senha';
-                      }
-                      if (valor.length < 6) {
-                        return 'A senha precisa ter pelo menos 6 caracteres';
-                      }
-                      return null;
-                    },
+                    ],
                   ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _confirmarSenhaController,
-                    obscureText: !_senhaVisivel,
-                    decoration: const InputDecoration(
-                      labelText: 'Confirmar senha',
-                      prefixIcon: Icon(Icons.lock_outline),
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (valor) {
-                      if (valor != _senhaController.text) {
-                        return 'As senhas não coincidem';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 24),
-                  FilledButton(
-                    onPressed: auth.processando ? null : _cadastrar,
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                    ),
-                    child: auth.processando
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.5,
-                              color: Colors.white,
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        TextFormField(
+                          controller: _nomeController,
+                          decoration: const InputDecoration(
+                            labelText: 'Nome',
+                            prefixIcon: Icon(Icons.person_outline),
+                          ),
+                          validator: (valor) {
+                            if (valor == null || valor.trim().isEmpty) {
+                              return 'Digite seu nome';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 14),
+                        TextFormField(
+                          controller: _emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          decoration: const InputDecoration(
+                            labelText: 'E-mail',
+                            prefixIcon: Icon(Icons.email_outlined),
+                          ),
+                          validator: (valor) {
+                            if (valor == null || valor.trim().isEmpty) {
+                              return 'Digite seu e-mail';
+                            }
+                            if (!valor.contains('@') || !valor.contains('.')) {
+                              return 'E-mail inválido';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 14),
+                        TextFormField(
+                          controller: _senhaController,
+                          obscureText: !_senhaVisivel,
+                          decoration: InputDecoration(
+                            labelText: 'Senha',
+                            prefixIcon: const Icon(Icons.lock_outline),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _senhaVisivel
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined,
+                                color: cores.textoSecundario,
+                              ),
+                              onPressed: () =>
+                                  setState(() => _senhaVisivel = !_senhaVisivel),
                             ),
-                          )
-                        : const Text('Criar conta'),
+                          ),
+                          validator: (valor) {
+                            if (valor == null || valor.isEmpty) {
+                              return 'Digite uma senha';
+                            }
+                            if (valor.length < 6) {
+                              return 'A senha precisa ter pelo menos 6 caracteres';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 14),
+                        TextFormField(
+                          controller: _confirmarSenhaController,
+                          obscureText: !_senhaVisivel,
+                          decoration: const InputDecoration(
+                            labelText: 'Confirmar senha',
+                            prefixIcon: Icon(Icons.lock_outline),
+                          ),
+                          validator: (valor) {
+                            if (valor != _senhaController.text) {
+                              return 'As senhas não coincidem';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 20),
+                        FilledButton(
+                          onPressed: auth.processando ? null : _cadastrar,
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 180),
+                            child: auth.processando
+                                ? const SizedBox(
+                                    key: ValueKey('carregando'),
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.5,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Text('Criar conta', key: ValueKey('rotulo')),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),

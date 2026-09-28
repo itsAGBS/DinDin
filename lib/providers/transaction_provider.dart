@@ -62,16 +62,10 @@ class TransactionProvider extends ChangeNotifier {
     try {
       await _syncService.excluirTransacao(uid, id);
     } catch (_) {
-      // Sem conexão ou erro no Firestore: a exclusão local já valeu,
-      // e não há como "marcar como pendente" uma exclusão sem manter
-      // um registro extra (fora do escopo desta fase). Se o documento
-      // continuar na nuvem, ele volta a aparecer localmente na próxima
-      // sincronização completa.
+
     }
   }
 
-  /// Dispara ao logar ou deslogar. Ao logar, faz uma sincronização
-  /// completa (sobe pendências locais, baixa o que só existe na nuvem).
   void _aoMudarUsuario(User? user) {
     _uid = user?.uid;
     if (user != null) {
@@ -82,9 +76,6 @@ class TransactionProvider extends ChangeNotifier {
     }
   }
 
-  /// Sincronização completa: envia tudo que está pendente localmente e
-  /// traz de volta qualquer transação que exista na nuvem mas não no
-  /// aparelho atual (ex: usuário logou em um dispositivo novo).
   Future<void> sincronizarComNuvem() async {
     final uid = _uid;
     if (uid == null) return;
@@ -113,9 +104,7 @@ class TransactionProvider extends ChangeNotifier {
       await carregarDados();
       _syncStatus = SyncStatus.sincronizado;
     } catch (_) {
-      // Provavelmente sem internet. Os dados locais continuam intactos;
-      // a sincronização será tentada novamente na próxima chamada
-      // (próximo login, próxima transação adicionada, etc).
+
       _syncStatus = SyncStatus.erro;
     }
     notifyListeners();
@@ -140,3 +129,4 @@ class TransactionProvider extends ChangeNotifier {
     super.dispose();
   }
 }
+

@@ -7,12 +7,6 @@ import '../models/transaction_model.dart';
 import '../providers/transaction_provider.dart';
 import '../theme/app_colors.dart';
 
-/// Tela única para cadastrar uma nova transação ou editar uma já existente.
-///
-/// - [tipoInicial] pré-seleciona receita/despesa quando vem do atalho
-///   rápido do dashboard.
-/// - [transacaoExistente] preenche o formulário e faz a tela salvar via
-///   [TransactionProvider.editarTransacao] em vez de criar um registro novo.
 class TransacaoFormScreen extends StatefulWidget {
   const TransacaoFormScreen({
     super.key,
@@ -64,8 +58,6 @@ class _TransacaoFormScreenState extends State<TransacaoFormScreen> {
     super.dispose();
   }
 
-  /// Ao trocar o tipo (receita/despesa), a categoria selecionada some se
-  /// ela não pertencer à lista de categorias do novo tipo.
   void _mudarTipo(TransactionType novoTipo) {
     setState(() {
       _tipo = novoTipo;
@@ -124,16 +116,11 @@ class _TransacaoFormScreenState extends State<TransacaoFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final corDoTipo = _tipo == TransactionType.receita
-        ? AppColors.receita
-        : AppColors.despesa;
+    final cores = context.cores;
+    final corDoTipo = _tipo == TransactionType.receita ? cores.receita : cores.despesa;
 
     return Scaffold(
-      backgroundColor: AppColors.fundo,
       appBar: AppBar(
-        backgroundColor: AppColors.fundo,
-        elevation: 0,
-        foregroundColor: Colors.black87,
         title: Text(
           widget.emEdicao ? 'Editar transação' : 'Nova transação',
           style: const TextStyle(
@@ -156,7 +143,7 @@ class _TransacaoFormScreenState extends State<TransacaoFormScreen> {
                       child: _SegmentoTipo(
                         label: 'Despesa',
                         icone: Icons.remove_circle_outline,
-                        cor: AppColors.despesa,
+                        cor: cores.despesa,
                         selecionado: _tipo == TransactionType.despesa,
                         onTap: () => _mudarTipo(TransactionType.despesa),
                       ),
@@ -166,7 +153,7 @@ class _TransacaoFormScreenState extends State<TransacaoFormScreen> {
                       child: _SegmentoTipo(
                         label: 'Receita',
                         icone: Icons.add_circle_outline,
-                        cor: AppColors.receita,
+                        cor: cores.receita,
                         selecionado: _tipo == TransactionType.receita,
                         onTap: () => _mudarTipo(TransactionType.receita),
                       ),
@@ -181,13 +168,6 @@ class _TransacaoFormScreenState extends State<TransacaoFormScreen> {
                   decoration: InputDecoration(
                     labelText: 'Valor',
                     prefixText: 'R\$ ',
-                    labelStyle: const TextStyle(fontFamily: 'Poppins'),
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide.none,
-                    ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
                       borderSide: BorderSide(color: corDoTipo, width: 1.5),
@@ -212,16 +192,9 @@ class _TransacaoFormScreenState extends State<TransacaoFormScreen> {
                   borderRadius: BorderRadius.circular(14),
                   onTap: _escolherData,
                   child: InputDecorator(
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: 'Data',
-                      labelStyle: const TextStyle(fontFamily: 'Poppins'),
-                      prefixIcon: const Icon(Icons.calendar_today_outlined, size: 20),
-                      filled: true,
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: BorderSide.none,
-                      ),
+                      prefixIcon: Icon(Icons.calendar_today_outlined, size: 20),
                     ),
                     child: Text(
                       DateFormat('dd/MM/yyyy').format(_data),
@@ -230,12 +203,13 @@ class _TransacaoFormScreenState extends State<TransacaoFormScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                const Text(
+                Text(
                   'Categoria',
                   style: TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
+                    color: cores.textoPrincipal,
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -256,15 +230,8 @@ class _TransacaoFormScreenState extends State<TransacaoFormScreen> {
                 TextFormField(
                   controller: _descricaoController,
                   style: const TextStyle(fontFamily: 'Poppins'),
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: 'Descrição (opcional)',
-                    labelStyle: const TextStyle(fontFamily: 'Poppins'),
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide.none,
-                    ),
                   ),
                   maxLength: 80,
                   textInputAction: TextInputAction.done,
@@ -279,22 +246,27 @@ class _TransacaoFormScreenState extends State<TransacaoFormScreen> {
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),
-                  child: _salvando
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.5,
-                            color: Colors.white,
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 180),
+                    child: _salvando
+                        ? const SizedBox(
+                            key: ValueKey('carregando'),
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Text(
+                            widget.emEdicao ? 'Salvar alterações' : 'Salvar',
+                            key: const ValueKey('rotulo'),
+                            style: const TextStyle(
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
-                        )
-                      : Text(
-                          widget.emEdicao ? 'Salvar alterações' : 'Salvar',
-                          style: const TextStyle(
-                            fontFamily: 'Poppins',
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
+                  ),
                 ),
               ],
             ),
@@ -322,35 +294,41 @@ class _SegmentoTipo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        decoration: BoxDecoration(
-          color: selecionado ? cor.withValues(alpha: 0.12) : Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: selecionado ? cor : const Color(0xFFE5E9F0),
-            width: selecionado ? 1.5 : 1,
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icone, color: cor, size: 20),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                color: cor,
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-              ),
+    final cores = context.cores;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        splashColor: cor.withValues(alpha: 0.12),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          decoration: BoxDecoration(
+            color: selecionado ? cor.withValues(alpha: 0.12) : cores.cardFundo,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: selecionado ? cor : cores.borda,
+              width: selecionado ? 1.5 : 1,
             ),
-          ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icone, color: cor, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  color: cor,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -372,38 +350,44 @@ class _CategoriaChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: selecionada ? corSelecionada.withValues(alpha: 0.12) : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: selecionada ? corSelecionada : const Color(0xFFE5E9F0),
-            width: selecionada ? 1.5 : 1,
+    final cores = context.cores;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        splashColor: corSelecionada.withValues(alpha: 0.12),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: selecionada ? corSelecionada.withValues(alpha: 0.12) : cores.cardFundo,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: selecionada ? corSelecionada : cores.borda,
+              width: selecionada ? 1.5 : 1,
+            ),
           ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              categoria.icone,
-              size: 18,
-              color: selecionada ? corSelecionada : Colors.black54,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              categoria.nome,
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontWeight: selecionada ? FontWeight.w600 : FontWeight.normal,
-                color: selecionada ? corSelecionada : Colors.black87,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                categoria.icone,
+                size: 18,
+                color: selecionada ? corSelecionada : cores.textoSecundario,
               ),
-            ),
-          ],
+              const SizedBox(width: 6),
+              Text(
+                categoria.nome,
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontWeight: selecionada ? FontWeight.w600 : FontWeight.normal,
+                  color: selecionada ? corSelecionada : cores.textoPrincipal,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
