@@ -90,3 +90,4 @@ flutter_launcher_icons:
   image_path: "assets/icon/logo.png"
   adaptive_icon_background: "#172033"
   adaptive_icon_foreground: "assets/icon/logo.png"
+  
