@@ -1,50 +1,85 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:io';
 import '../providers/transaction_provider.dart';
+import '../providers/auth_provider.dart';
 import '../models/transaction_model.dart';
 import '../theme/app_colors.dart';
-import '../utils/page_transitions.dart';
-import '../widgets/dindin_logo.dart';
-import '../widgets/estado_vazio.dart';
 import '../widgets/saldo_card.dart';
 import '../widgets/transacao_tile.dart';
 import 'historico_screen.dart';
 import 'transacao_form_screen.dart';
 import 'configurar_bloqueio_screen.dart';
+import 'perfil_screen.dart';
 
+/// Tela principal exibida ao abrir o app.
+/// Mostra saldo atual, últimas transações e acesso rápido
+/// para adicionar receita/despesa.
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
 
   void _abrirFormulario(BuildContext context, TransactionType tipo) {
     Navigator.of(context).push(
-      rotaComTransicaoSuave(TransacaoFormScreen(tipoInicial: tipo)),
+      MaterialPageRoute(
+        builder: (_) => TransacaoFormScreen(tipoInicial: tipo),
+      ),
     );
   }
 
   void _abrirEdicao(BuildContext context, TransactionModel transacao) {
     Navigator.of(context).push(
-      rotaComTransicaoSuave(TransacaoFormScreen(transacaoExistente: transacao)),
+      MaterialPageRoute(
+        builder: (_) => TransacaoFormScreen(transacaoExistente: transacao),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<TransactionProvider>();
-    final cores = context.cores;
+    final auth = context.watch<AuthProvider>();
+    final user = auth.user;
+
+    ImageProvider? imagemAvatar;
+    if (auth.fotoLocalPath != null) {
+      imagemAvatar = FileImage(File(auth.fotoLocalPath!));
+    } else if (user?.photoURL != null) {
+      imagemAvatar = NetworkImage(user!.photoURL!);
+    }
 
     return Scaffold(
+      backgroundColor: AppColors.fundo,
       appBar: AppBar(
-        centerTitle: false,
-        title: const Align(
-          alignment: Alignment.centerLeft,
-          child: DinDinMark(size: 34),
+        backgroundColor: AppColors.fundo,
+        elevation: 0,
+        leadingWidth: 56,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 16),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(20),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const PerfilScreen()),
+            ),
+            child: CircleAvatar(
+              radius: 18,
+              backgroundColor: AppColors.destaque,
+              backgroundImage: imagemAvatar,
+              child: imagemAvatar == null
+                  ? const Icon(Icons.person, color: Colors.white, size: 20)
+                  : null,
+            ),
+          ),
+        ),
+        title: const Text(
+          'DinDin',
+          style: TextStyle(fontFamily: 'Poppins', color: Colors.black87),
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.lock_outline, color: cores.textoSecundario),
+            icon: const Icon(Icons.lock_outline, color: Colors.black54),
             tooltip: 'Segurança',
             onPressed: () => Navigator.of(context).push(
-              rotaComTransicaoSuave(const ConfigurarBloqueioScreen()),
+              MaterialPageRoute(builder: (_) => const ConfigurarBloqueioScreen()),
             ),
           ),
         ],
@@ -57,16 +92,36 @@ class DashboardScreen extends StatelessWidget {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
             children: [
+              const Text(
+                'Olá! 👋',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'Aqui está o resumo das suas finanças',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 14,
+                  color: Colors.black54,
+                ),
+              ),
+              const SizedBox(height: 16),
+
               SaldoCard(saldo: provider.saldo),
               const SizedBox(height: 16),
 
+              // Acesso rápido para adicionar receita/despesa
               Row(
                 children: [
                   Expanded(
                     child: _BotaoRapido(
                       label: 'Receita',
                       icone: Icons.add_circle_outline,
-                      cor: cores.receita,
+                      cor: AppColors.receita,
                       onTap: () => _abrirFormulario(context, TransactionType.receita),
                     ),
                   ),
@@ -75,7 +130,7 @@ class DashboardScreen extends StatelessWidget {
                     child: _BotaoRapido(
                       label: 'Despesa',
                       icone: Icons.remove_circle_outline,
-                      cor: cores.despesa,
+                      cor: AppColors.despesa,
                       onTap: () => _abrirFormulario(context, TransactionType.despesa),
                     ),
                   ),
@@ -86,24 +141,23 @@ class DashboardScreen extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
+                  const Text(
                     'Últimas transações',
                     style: TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: cores.textoPrincipal,
                     ),
                   ),
                   TextButton(
                     onPressed: () => Navigator.of(context).push(
-                      rotaComTransicaoSuave(const HistoricoScreen()),
+                      MaterialPageRoute(builder: (_) => const HistoricoScreen()),
                     ),
-                    child: Text(
+                    child: const Text(
                       'Ver tudo',
                       style: TextStyle(
                         fontFamily: 'Poppins',
-                        color: cores.azul,
+                        color: AppColors.acao,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -113,11 +167,7 @@ class DashboardScreen extends StatelessWidget {
               const SizedBox(height: 4),
 
               if (provider.ultimasTransacoes.isEmpty)
-                const EstadoVazio(
-                  icone: Icons.receipt_long_outlined,
-                  titulo: 'Nenhuma transação ainda',
-                  subtitulo: 'Toque em Receita ou Despesa para começar',
-                )
+                const _EstadoVazio()
               else
                 ...provider.ultimasTransacoes.map(
                       (t) => TransacaoTile(
@@ -148,44 +198,53 @@ class _BotaoRapido extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        splashColor: cor.withValues(alpha: 0.12),
-        highlightColor: cor.withValues(alpha: 0.06),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          decoration: BoxDecoration(
-            color: cor.withValues(alpha: 0.10),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: cor.withValues(alpha: 0.35)),
-            boxShadow: [
-              BoxShadow(
-                color: cor.withValues(alpha: 0.10),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icone, color: cor, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  color: cor,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          color: cor.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: cor.withValues(alpha: 0.35)),
         ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icone, color: cor, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                color: cor,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EstadoVazio extends StatelessWidget {
+  const _EstadoVazio();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 24),
+      child: Column(
+        children: const [
+          Icon(Icons.receipt_long_outlined, size: 40, color: Colors.black26),
+          SizedBox(height: 8),
+          Text(
+            'Nenhuma transação ainda',
+            style: TextStyle(fontFamily: 'Poppins', color: Colors.black45),
+          ),
+        ],
       ),
     );
   }
