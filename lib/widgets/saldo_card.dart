@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 
-class SaldoCard extends StatelessWidget {
+class SaldoCard extends StatefulWidget {
   final double saldo;
 
   const SaldoCard({super.key, required this.saldo});
+
+  @override
+  State<SaldoCard> createState() => _SaldoCardState();
+}
+
+class _SaldoCardState extends State<SaldoCard> {
+  double get saldo => widget.saldo;
 
   String _formatarMoeda(double valor) {
     final sinal = valor < 0 ? '-' : '';
