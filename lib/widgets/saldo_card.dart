@@ -11,7 +11,15 @@ class SaldoCard extends StatefulWidget {
 }
 
 class _SaldoCardState extends State<SaldoCard> {
+  bool _saldoVisivel = true;
+
   double get saldo => widget.saldo;
+
+  void _alternarVisibilidadeSaldo() {
+    setState(() => _saldoVisivel = !_saldoVisivel);
+  }
+
+  static const _saldoMascarado = 'R\$ ••••••';
 
   String _formatarMoeda(double valor) {
     final sinal = valor < 0 ? '-' : '';
@@ -51,14 +59,34 @@ class _SaldoCardState extends State<SaldoCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Saldo atual',
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  color: Colors.white70,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
+              Row(
+                children: [
+                  const Text(
+                    'Saldo atual',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      color: Colors.white70,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  IconButton(
+                    onPressed: _alternarVisibilidadeSaldo,
+                    tooltip: _saldoVisivel ? 'Ocultar saldo' : 'Mostrar saldo',
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
+                    constraints:
+                        const BoxConstraints(minWidth: 32, minHeight: 32),
+                    icon: Icon(
+                      _saldoVisivel
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      color: Colors.white70,
+                      size: 20,
+                    ),
+                  ),
+                ],
               ),
               Container(
                 padding: const EdgeInsets.all(6),
@@ -76,7 +104,7 @@ class _SaldoCardState extends State<SaldoCard> {
           ),
           const SizedBox(height: 8),
           Text(
-            _formatarMoeda(saldo),
+            _saldoVisivel ? _formatarMoeda(saldo) : _saldoMascarado,
             style: const TextStyle(
               fontFamily: 'Poppins',
               color: Colors.white,
