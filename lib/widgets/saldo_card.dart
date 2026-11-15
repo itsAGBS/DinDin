@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../theme/app_colors.dart';
 
 class SaldoCard extends StatefulWidget {
@@ -11,12 +12,38 @@ class SaldoCard extends StatefulWidget {
 }
 
 class _SaldoCardState extends State<SaldoCard> {
+  static const _chaveSaldoVisivel = 'saldo_visivel';
+  static const _storage = FlutterSecureStorage();
+
   bool _saldoVisivel = true;
 
   double get saldo => widget.saldo;
 
-  void _alternarVisibilidadeSaldo() {
-    setState(() => _saldoVisivel = !_saldoVisivel);
+  @override
+  void initState() {
+    super.initState();
+    _carregarPreferenciaVisibilidade();
+  }
+
+  Future<void> _carregarPreferenciaVisibilidade() async {
+    try {
+      final valor = await _storage.read(key: _chaveSaldoVisivel);
+      if (valor != null && mounted) {
+        setState(() => _saldoVisivel = valor == 'true');
+      }
+    } catch (_) {
+      // Mantem o padrao (saldo visivel) se a leitura falhar.
+    }
+  }
+
+  Future<void> _alternarVisibilidadeSaldo() async {
+    final novoValor = !_saldoVisivel;
+    setState(() => _saldoVisivel = novoValor);
+    try {
+      await _storage.write(key: _chaveSaldoVisivel, value: '$novoValor');
+    } catch (_) {
+      // Falha ao persistir nao deve impedir a alternancia na tela.
+    }
   }
 
   static const _saldoMascarado = 'R\$ ••••••';
