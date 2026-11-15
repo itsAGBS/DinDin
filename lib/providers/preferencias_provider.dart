@@ -1,58 +1,78 @@
 import 'package:flutter/material.dart';
 
-import '../models/moeda.dart';
 import '../services/preferencias_service.dart';
+import '../utils/moeda.dart';
 
-/// Expõe as preferências gerais do app (tema, moeda, resumo mensal
-/// automático) para qualquer tela via Provider, escondendo os detalhes
-/// de `shared_preferences`.
+/// Preferências do app: tema, moeda e resumo mensal automático.
+///
+/// Carregue com [PreferenciasProvider.carregar] antes do `runApp` para que o
+/// tema salvo já seja aplicado no primeiro frame (sem "piscar" o tema errado).
 class PreferenciasProvider extends ChangeNotifier {
-  PreferenciasProvider({PreferenciasService? service})
-      : _service = service ?? PreferenciasService() {
-    _carregar();
+  PreferenciasProvider(this._service)
+      : _themeMode = _service.lerTema(),
+        _moeda = _service.lerMoeda(),
+        _resumoMensalAtivo = _service.lerResumoAtivo(),
+        _ultimoResumo = _service.lerUltimoResumo();
+
+  static Future<PreferenciasProvider> carregar() async {
+    return PreferenciasProvider(await PreferenciasService.criar());
   }
 
   final PreferenciasService _service;
 
-  bool _carregando = true;
-  bool _modoEscuro = false;
-  Moeda _moeda = Moeda.brl;
-  bool _resumoMensalAutomatico = false;
+  ThemeMode _themeMode;
+  Moeda _moeda;
+  bool _resumoMensalAtivo;
+  String? _ultimoResumo;
 
-  bool get carregando => _carregando;
-  bool get modoEscuro => _modoEscuro;
+  ThemeMode get themeMode => _themeMode;
   Moeda get moeda => _moeda;
-  bool get resumoMensalAutomatico => _resumoMensalAutomatico;
+  bool get resumoMensalAtivo => _resumoMensalAtivo;
 
-  /// Pronto para ser passado direto em `MaterialApp(themeMode: ...)`.
-  ThemeMode get themeMode => _modoEscuro ? ThemeMode.dark : ThemeMode.light;
+  String formatarMoeda(double valor) => _moeda.formatar(valor);
 
-  Future<void> _carregar() async {
-    _modoEscuro = await _service.obterModoEscuro();
-    _moeda = await _service.obterMoeda();
-    _resumoMensalAutomatico = await _service.obterResumoMensalAutomatico();
-    _carregando = false;
+  Future<void> definirTema(ThemeMode tema) async {
+    if (tema == _themeMode) return;
+    _themeMode = tema;
     notifyListeners();
-  }
-
-  Future<void> definirModoEscuro(bool ativado) async {
-    _modoEscuro = ativado;
-    notifyListeners();
-    await _service.salvarModoEscuro(ativado);
+    await _service.salvarTema(tema);
   }
 
   Future<void> definirMoeda(Moeda moeda) async {
+    if (moeda == _moeda) return;
     _moeda = moeda;
     notifyListeners();
     await _service.salvarMoeda(moeda);
   }
 
-  /// Liga/desliga o resumo mensal automático. Esta tela só guarda a
-  /// preferência; a geração do resumo em si (notificação, e-mail, etc.)
-  /// é uma funcionalidade separada, ainda não implementada.
-  Future<void> definirResumoMensalAutomatico(bool ativado) async {
-    _resumoMensalAutomatico = ativado;
+  Future<void> definirResumoMensal(bool ativo) async {
+    if (ativo == _resumoMensalAtivo) return;
+    _resumoMensalAtivo = ativo;
+
+    if (ativo) {
+      // Ao ativar no meio do mês, o primeiro resumo só aparece quando o mês
+      // virar (e será o do mês que acabou de fechar).
+      _ultimoResumo = chaveDoMes(DateTime.now());
+      await _service.salvarUltimoResumo(_ultimoResumo!);
+    }
+
     notifyListeners();
-    await _service.salvarResumoMensalAutomatico(ativado);
+    await _service.salvarResumoAtivo(ativo);
   }
+
+  /// True quando o resumo está ligado e ainda não foi exibido neste mês.
+  bool deveExibirResumo(DateTime agora) {
+    if (!_resumoMensalAtivo) return false;
+    final ultimo = _ultimoResumo;
+    if (ultimo == null) return false;
+    return ultimo != chaveDoMes(agora);
+  }
+
+  Future<void> marcarResumoExibido(DateTime agora) async {
+    _ultimoResumo = chaveDoMes(agora);
+    await _service.salvarUltimoResumo(_ultimoResumo!);
+  }
+
+  static String chaveDoMes(DateTime data) =>
+      '${data.year}-${data.month.toString().padLeft(2, '0')}';
 }

@@ -1,43 +1,54 @@
+import 'package:flutter/material.dart' show ThemeMode;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../models/moeda.dart';
+import '../utils/moeda.dart';
 
-/// Guarda as preferências gerais do app (não ligadas a uma conta
-/// específica) no armazenamento local do dispositivo via
-/// `shared_preferences`. Segue o mesmo papel que `BloqueioService` tem
-/// para o bloqueio: quem fala com a biblioteca externa é só esta classe.
+/// Persistência local das preferências do app (tema, moeda, resumo mensal).
 class PreferenciasService {
-  static const _chaveModoEscuro = 'pref_modo_escuro';
+  PreferenciasService(this._prefs);
+
+  final SharedPreferences _prefs;
+
+  static Future<PreferenciasService> criar() async {
+    return PreferenciasService(await SharedPreferences.getInstance());
+  }
+
+  static const _chaveTema = 'pref_tema';
   static const _chaveMoeda = 'pref_moeda';
-  static const _chaveResumoMensal = 'pref_resumo_mensal_automatico';
+  static const _chaveResumoAtivo = 'pref_resumo_mensal_ativo';
+  static const _chaveUltimoResumo = 'pref_resumo_mensal_ultimo_mes';
 
-  Future<bool> obterModoEscuro() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_chaveModoEscuro) ?? false;
+  ThemeMode lerTema() {
+    switch (_prefs.getString(_chaveTema)) {
+      case 'light':
+        return ThemeMode.light;
+      case 'dark':
+        return ThemeMode.dark;
+      default:
+        return ThemeMode.system;
+    }
   }
 
-  Future<void> salvarModoEscuro(bool ativado) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_chaveModoEscuro, ativado);
+  Future<void> salvarTema(ThemeMode tema) async {
+    await _prefs.setString(_chaveTema, tema.name);
   }
 
-  Future<Moeda> obterMoeda() async {
-    final prefs = await SharedPreferences.getInstance();
-    return MoedaExtensao.porCodigo(prefs.getString(_chaveMoeda));
-  }
+  Moeda lerMoeda() => Moeda.doNome(_prefs.getString(_chaveMoeda));
 
   Future<void> salvarMoeda(Moeda moeda) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_chaveMoeda, moeda.codigo);
+    await _prefs.setString(_chaveMoeda, moeda.name);
   }
 
-  Future<bool> obterResumoMensalAutomatico() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_chaveResumoMensal) ?? false;
+  bool lerResumoAtivo() => _prefs.getBool(_chaveResumoAtivo) ?? false;
+
+  Future<void> salvarResumoAtivo(bool ativo) async {
+    await _prefs.setBool(_chaveResumoAtivo, ativo);
   }
 
-  Future<void> salvarResumoMensalAutomatico(bool ativado) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_chaveResumoMensal, ativado);
+  /// Mês (formato "2026-11") em que o resumo foi exibido pela última vez.
+  String? lerUltimoResumo() => _prefs.getString(_chaveUltimoResumo);
+
+  Future<void> salvarUltimoResumo(String mes) async {
+    await _prefs.setString(_chaveUltimoResumo, mes);
   }
 }
