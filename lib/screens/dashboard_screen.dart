@@ -6,9 +6,12 @@ import '../theme/app_colors.dart';
 import '../utils/page_transitions.dart';
 import '../widgets/dindin_logo.dart';
 import '../widgets/estado_vazio.dart';
+import '../widgets/grafico_categorias.dart';
+import '../widgets/orcamento_mensal_card.dart';
 import '../widgets/saldo_card.dart';
 import '../widgets/transacao_tile.dart';
 import 'historico_screen.dart';
+import 'orcamento_screen.dart';
 import 'transacao_form_screen.dart';
 import 'configurar_bloqueio_screen.dart';
 
@@ -27,10 +30,17 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
+  void _abrirOrcamento(BuildContext context) {
+    Navigator.of(context).push(
+      rotaComTransicaoSuave(const OrcamentoScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<TransactionProvider>();
     final cores = context.cores;
+    final referencia = DateTime.now();
 
     return Scaffold(
       appBar: AppBar(
@@ -53,81 +63,98 @@ class DashboardScreen extends StatelessWidget {
         child: provider.carregando
             ? const Center(child: CircularProgressIndicator())
             : RefreshIndicator(
-          onRefresh: () => context.read<TransactionProvider>().carregarDados(),
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-            children: [
-              SaldoCard(saldo: provider.saldo),
-              const SizedBox(height: 16),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: _BotaoRapido(
-                      label: 'Receita',
-                      icone: Icons.add_circle_outline,
-                      cor: cores.receita,
-                      onTap: () => _abrirFormulario(context, TransactionType.receita),
+                onRefresh: () =>
+                    context.read<TransactionProvider>().carregarDados(),
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                  children: [
+                    SaldoCard(saldo: provider.saldo),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _BotaoRapido(
+                            label: 'Receita',
+                            icone: Icons.add_circle_outline,
+                            cor: cores.receita,
+                            onTap: () => _abrirFormulario(
+                              context,
+                              TransactionType.receita,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _BotaoRapido(
+                            label: 'Despesa',
+                            icone: Icons.remove_circle_outline,
+                            cor: cores.despesa,
+                            onTap: () => _abrirFormulario(
+                              context,
+                              TransactionType.despesa,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _BotaoRapido(
-                      label: 'Despesa',
-                      icone: Icons.remove_circle_outline,
-                      cor: cores.despesa,
-                      onTap: () => _abrirFormulario(context, TransactionType.despesa),
+                    const SizedBox(height: 24),
+                    OrcamentoMensalCard(
+                      limite: provider.limiteMensal,
+                      gasto: provider.gastoMesAtual,
+                      referencia: referencia,
+                      onConfigurar: () => _abrirOrcamento(context),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Últimas transações',
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: cores.textoPrincipal,
+                    const SizedBox(height: 16),
+                    GraficoCategorias(
+                      despesasPorCategoria:
+                          provider.despesasPorCategoriaMesAtual,
+                      referencia: referencia,
                     ),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.of(context).push(
-                      rotaComTransicaoSuave(const HistoricoScreen()),
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Últimas transações',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: cores.textoPrincipal,
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).push(
+                            rotaComTransicaoSuave(const HistoricoScreen()),
+                          ),
+                          child: Text(
+                            'Ver tudo',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              color: cores.azul,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    child: Text(
-                      'Ver tudo',
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        color: cores.azul,
-                        fontWeight: FontWeight.w600,
+                    const SizedBox(height: 4),
+                    if (provider.ultimasTransacoes.isEmpty)
+                      const EstadoVazio(
+                        icone: Icons.receipt_long_outlined,
+                        titulo: 'Nenhuma transação ainda',
+                        subtitulo: 'Toque em Receita ou Despesa para começar',
+                      )
+                    else
+                      ...provider.ultimasTransacoes.map(
+                        (t) => TransacaoTile(
+                          transacao: t,
+                          onTap: () => _abrirEdicao(context, t),
+                        ),
                       ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-
-              if (provider.ultimasTransacoes.isEmpty)
-                const EstadoVazio(
-                  icone: Icons.receipt_long_outlined,
-                  titulo: 'Nenhuma transação ainda',
-                  subtitulo: 'Toque em Receita ou Despesa para começar',
-                )
-              else
-                ...provider.ultimasTransacoes.map(
-                      (t) => TransacaoTile(
-                        transacao: t,
-                        onTap: () => _abrirEdicao(context, t),
-                      ),
+                  ],
                 ),
-            ],
-          ),
-        ),
+              ),
       ),
     );
   }
