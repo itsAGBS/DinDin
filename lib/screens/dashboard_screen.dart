@@ -6,6 +6,7 @@ import '../theme/app_colors.dart';
 import '../utils/page_transitions.dart';
 import '../widgets/dindin_logo.dart';
 import '../widgets/estado_vazio.dart';
+import '../widgets/grafico_categorias.dart';
 import '../widgets/orcamento_mensal_card.dart';
 import '../widgets/saldo_card.dart';
 import '../widgets/transacao_tile.dart';
@@ -102,6 +103,12 @@ class DashboardScreen extends StatelessWidget {
                       gasto: provider.gastoMesAtual,
                       referencia: referencia,
                       onConfigurar: () => _abrirOrcamento(context),
+                    ),
+                    const SizedBox(height: 16),
+                    GraficoCategorias(
+                      despesasPorCategoria:
+                          provider.despesasPorCategoriaMesAtual,
+                      referencia: referencia,
                     ),
                     const SizedBox(height: 24),
                     Row(
