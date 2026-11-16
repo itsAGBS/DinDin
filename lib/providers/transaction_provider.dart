@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -6,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import '../database/database_helper.dart';
 import '../models/transaction_model.dart';
 import '../services/sync_service.dart';
+import '../utils/calculos_mensais.dart';
 
 enum SyncStatus { desconectado, sincronizando, sincronizado, erro }
 
@@ -22,22 +24,67 @@ class TransactionProvider extends ChangeNotifier {
 
   List<TransactionModel> _transacoes = [];
   double _saldo = 0;
+  double? _limiteMensal;
   bool _carregando = false;
   String? _uid;
   SyncStatus _syncStatus = SyncStatus.desconectado;
 
   List<TransactionModel> get transacoes => _transacoes;
   double get saldo => _saldo;
+  double? get limiteMensal => _limiteMensal;
   bool get carregando => _carregando;
   List<TransactionModel> get ultimasTransacoes => _transacoes.take(5).toList();
   SyncStatus get syncStatus => _syncStatus;
 
+  double get gastoMesAtual =>
+      CalculosMensais.gastoDoMes(_transacoes, DateTime.now());
+
+  double get restanteOrcamento {
+    final limite = _limiteMensal;
+    if (limite == null) return 0;
+    return math.max(0.0, limite - gastoMesAtual).toDouble();
+  }
+
+  double get fracaoOrcamento =>
+      CalculosMensais.fracaoUsada(gastoMesAtual, _limiteMensal);
+
+  double get percentualOrcamento => fracaoOrcamento * 100;
+
+  bool get orcamentoExcedido {
+    final limite = _limiteMensal;
+    if (limite == null) return false;
+    return CalculosMensais.nivel(gastoMesAtual, limite) ==
+        NivelOrcamento.excedido;
+  }
+
+  Map<String, double> get despesasPorCategoriaMesAtual =>
+      CalculosMensais.despesasPorCategoria(_transacoes, DateTime.now());
+
   Future<void> carregarDados() async {
     _carregando = true;
     notifyListeners();
-    _transacoes = await DatabaseHelper.instance.getAllTransactions();
-    _saldo = await DatabaseHelper.instance.getSaldoAtual();
-    _carregando = false;
+
+    try {
+      _transacoes = await DatabaseHelper.instance.getAllTransactions();
+      _saldo = await DatabaseHelper.instance.getSaldoAtual();
+      _limiteMensal = await DatabaseHelper.instance.getLimiteMensal();
+    } finally {
+      _carregando = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> definirLimiteMensal(double valor) async {
+    if (valor <= 0) {
+      throw ArgumentError.value(
+        valor,
+        'valor',
+        'O limite deve ser maior que zero',
+      );
+    }
+
+    await DatabaseHelper.instance.salvarLimiteMensal(valor);
+    _limiteMensal = valor;
     notifyListeners();
   }
 
@@ -62,7 +109,8 @@ class TransactionProvider extends ChangeNotifier {
     try {
       await _syncService.excluirTransacao(uid, id);
     } catch (_) {
-
+      // A exclusão local já ocorreu; a estratégia de retry da nuvem pode ser
+      // aprimorada separadamente sem afetar orçamento e gráficos.
     }
   }
 
@@ -84,7 +132,8 @@ class TransactionProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final pendentes = await DatabaseHelper.instance.getTransacoesNaoSincronizadas();
+      final pendentes =
+          await DatabaseHelper.instance.getTransacoesNaoSincronizadas();
       for (final t in pendentes) {
         await _syncService.enviarTransacao(uid, t);
         if (t.id != null) {
@@ -95,7 +144,8 @@ class TransactionProvider extends ChangeNotifier {
       final remotas = await _syncService.buscarTodasTransacoes(uid);
       for (final t in remotas) {
         if (t.id == null) continue;
-        final existeLocal = await DatabaseHelper.instance.existeTransacaoComId(t.id!);
+        final existeLocal =
+            await DatabaseHelper.instance.existeTransacaoComId(t.id!);
         if (!existeLocal) {
           await DatabaseHelper.instance.inserirTransacaoDaNuvem(t);
         }
@@ -104,7 +154,6 @@ class TransactionProvider extends ChangeNotifier {
       await carregarDados();
       _syncStatus = SyncStatus.sincronizado;
     } catch (_) {
-
       _syncStatus = SyncStatus.erro;
     }
     notifyListeners();
@@ -129,4 +178,3 @@ class TransactionProvider extends ChangeNotifier {
     super.dispose();
   }
 }
-
