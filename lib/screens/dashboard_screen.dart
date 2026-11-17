@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/preferencias_provider.dart';
 import '../providers/transaction_provider.dart';
 import '../models/transaction_model.dart';
 import '../theme/app_colors.dart';
 import '../utils/page_transitions.dart';
 import '../widgets/dindin_logo.dart';
-import '../widgets/avatar_usuario.dart';
 import '../widgets/estado_vazio.dart';
-import '../widgets/resumo_mensal_sheet.dart';
 import '../widgets/grafico_categorias.dart';
 import '../widgets/orcamento_mensal_card.dart';
 import '../widgets/saldo_card.dart';
@@ -17,46 +14,9 @@ import 'historico_screen.dart';
 import 'orcamento_screen.dart';
 import 'transacao_form_screen.dart';
 import 'configurar_bloqueio_screen.dart';
-import 'configuracoes_screen.dart';
 
-class DashboardScreen extends StatefulWidget {
+class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
-
-  @override
-  State<DashboardScreen> createState() => _DashboardScreenState();
-}
-
-class _DashboardScreenState extends State<DashboardScreen> {
-  bool _resumoVerificado = false;
-
-  /// Se o resumo mensal estiver ligado e o mês virou desde a última vez,
-  /// mostra o resumo do mês anterior. Espera as transações carregarem.
-  void _verificarResumoMensal() {
-    if (_resumoVerificado) return;
-
-    final transacoes = context.read<TransactionProvider>();
-    if (transacoes.carregando) return;
-    _resumoVerificado = true;
-
-    final prefs = context.read<PreferenciasProvider>();
-    final agora = DateTime.now();
-    if (!prefs.deveExibirResumo(agora)) return;
-
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (!mounted) return;
-      // Marca antes de exibir para o resumo não reaparecer se o app for
-      // bloqueado/desbloqueado ou reaberto em seguida.
-      await prefs.marcarResumoExibido(agora);
-      if (!mounted) return;
-
-      await mostrarResumoMensal(
-        context,
-        mes: DateTime(agora.year, agora.month - 1),
-        transacoes: transacoes.transacoes,
-        formatarMoeda: prefs.formatarMoeda,
-      );
-    });
-  }
 
   void _abrirFormulario(BuildContext context, TransactionType tipo) {
     Navigator.of(context).push(
@@ -82,8 +42,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final cores = context.cores;
     final referencia = DateTime.now();
 
-    _verificarResumoMensal();
-
     return Scaffold(
       appBar: AppBar(
         centerTitle: false,
@@ -99,14 +57,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               rotaComTransicaoSuave(const ConfigurarBloqueioScreen()),
             ),
           ),
-          IconButton(
-            tooltip: 'Perfil e configurações',
-            icon: const AvatarUsuario(raio: 15),
-            onPressed: () => Navigator.of(context).push(
-              rotaComTransicaoSuave(const ConfiguracoesScreen()),
-            ),
-          ),
-          const SizedBox(width: 4),
         ],
       ),
       body: SafeArea(
