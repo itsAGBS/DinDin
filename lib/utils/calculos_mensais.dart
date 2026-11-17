@@ -29,20 +29,6 @@ class CalculosMensais {
     return totalCentavos / 100;
   }
 
-  /// Soma somente receitas do mês de [referencia]. Despesas são ignoradas.
-  static double receitaDoMes(
-    List<TransactionModel> transacoes,
-    DateTime referencia,
-  ) {
-    var totalCentavos = 0;
-    for (final t in transacoes) {
-      if (t.tipo == TransactionType.receita && ehDoMes(t.data, referencia)) {
-        totalCentavos += _centavos(t.valor);
-      }
-    }
-    return totalCentavos / 100;
-  }
-
   /// Despesas do mês agrupadas por categoria, da maior para a menor.
   static Map<String, double> despesasPorCategoria(
     List<TransactionModel> transacoes,
