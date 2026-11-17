@@ -78,6 +78,60 @@ class AuthService {
     }
   }
 
+  /// True se a conta tem senha própria (cadastro com e-mail). Contas criadas
+  /// só com o Google não têm senha para alterar.
+  bool get possuiSenha =>
+      currentUser?.providerData.any((info) => info.providerId == 'password') ??
+      false;
+
+  Future<void> atualizarNome(String nome) async {
+    final user = _firebaseAuth.currentUser;
+    if (user == null) {
+      throw AuthException('Sessão expirada. Entre novamente.');
+    }
+
+    try {
+      await user.updateDisplayName(nome.trim());
+      await user.reload();
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(_mensagemDeErro(e.code));
+    }
+  }
+
+  /// O Firebase só aceita trocar a senha de um login recente, então
+  /// reautenticamos com a senha atual antes de aplicar a nova.
+  Future<void> alterarSenha({
+    required String senhaAtual,
+    required String novaSenha,
+  }) async {
+    final user = _firebaseAuth.currentUser;
+    final email = user?.email;
+    if (user == null || email == null) {
+      throw AuthException('Sessão expirada. Entre novamente.');
+    }
+
+    try {
+      final credencial = EmailAuthProvider.credential(
+        email: email,
+        password: senhaAtual,
+      );
+      await user.reauthenticateWithCredential(credencial);
+      await user.updatePassword(novaSenha);
+    } on FirebaseAuthException catch (e) {
+      switch (e.code) {
+        case 'wrong-password':
+        case 'invalid-credential':
+          throw AuthException('Senha atual incorreta.');
+        case 'requires-recent-login':
+          throw AuthException(
+            'Por segurança, saia da conta, entre novamente e tente de novo.',
+          );
+        default:
+          throw AuthException(_mensagemDeErro(e.code));
+      }
+    }
+  }
+
   Future<void> sair() async {
     await Future.wait([
       _firebaseAuth.signOut(),

@@ -58,6 +58,41 @@ class AuthProvider extends ChangeNotifier {
     return _executar(() => _authService.enviarEmailRedefinicaoSenha(email));
   }
 
+  bool get possuiSenha => _authService.possuiSenha;
+
+  /// Os dois métodos abaixo devolvem a mensagem de erro (ou null se deu certo)
+  /// em vez de usar [erro]/[processando], para não vazar mensagens da tela de
+  /// configurações para as telas de login e cadastro.
+  Future<String?> atualizarNome(String nome) async {
+    try {
+      await _authService.atualizarNome(nome);
+      _user = _authService.currentUser;
+      notifyListeners();
+      return null;
+    } on AuthException catch (e) {
+      return e.message;
+    } catch (_) {
+      return 'Algo deu errado. Tente novamente.';
+    }
+  }
+
+  Future<String?> alterarSenha({
+    required String senhaAtual,
+    required String novaSenha,
+  }) async {
+    try {
+      await _authService.alterarSenha(
+        senhaAtual: senhaAtual,
+        novaSenha: novaSenha,
+      );
+      return null;
+    } on AuthException catch (e) {
+      return e.message;
+    } catch (_) {
+      return 'Algo deu errado. Tente novamente.';
+    }
+  }
+
   Future<void> sair() async {
     await _authService.sair();
   }
