@@ -1,10 +1,52 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../theme/app_colors.dart';
 
-class SaldoCard extends StatelessWidget {
+class SaldoCard extends StatefulWidget {
   final double saldo;
 
   const SaldoCard({super.key, required this.saldo});
+
+  @override
+  State<SaldoCard> createState() => _SaldoCardState();
+}
+
+class _SaldoCardState extends State<SaldoCard> {
+  static const _chaveSaldoVisivel = 'saldo_visivel';
+  static const _storage = FlutterSecureStorage();
+
+  bool _saldoVisivel = true;
+
+  double get saldo => widget.saldo;
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarPreferenciaVisibilidade();
+  }
+
+  Future<void> _carregarPreferenciaVisibilidade() async {
+    try {
+      final valor = await _storage.read(key: _chaveSaldoVisivel);
+      if (valor != null && mounted) {
+        setState(() => _saldoVisivel = valor == 'true');
+      }
+    } catch (_) {
+      // Mantem o padrao (saldo visivel) se a leitura falhar.
+    }
+  }
+
+  Future<void> _alternarVisibilidadeSaldo() async {
+    final novoValor = !_saldoVisivel;
+    setState(() => _saldoVisivel = novoValor);
+    try {
+      await _storage.write(key: _chaveSaldoVisivel, value: '$novoValor');
+    } catch (_) {
+      // Falha ao persistir nao deve impedir a alternancia na tela.
+    }
+  }
+
+  static const _saldoMascarado = 'R\$ ••••••';
 
   String _formatarMoeda(double valor) {
     final sinal = valor < 0 ? '-' : '';
@@ -44,14 +86,34 @@ class SaldoCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Saldo atual',
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  color: Colors.white70,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
+              Row(
+                children: [
+                  const Text(
+                    'Saldo atual',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      color: Colors.white70,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  IconButton(
+                    onPressed: _alternarVisibilidadeSaldo,
+                    tooltip: _saldoVisivel ? 'Ocultar saldo' : 'Mostrar saldo',
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
+                    constraints:
+                        const BoxConstraints(minWidth: 32, minHeight: 32),
+                    icon: Icon(
+                      _saldoVisivel
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      color: Colors.white70,
+                      size: 20,
+                    ),
+                  ),
+                ],
               ),
               Container(
                 padding: const EdgeInsets.all(6),
@@ -69,7 +131,7 @@ class SaldoCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            _formatarMoeda(saldo),
+            _saldoVisivel ? _formatarMoeda(saldo) : _saldoMascarado,
             style: const TextStyle(
               fontFamily: 'Poppins',
               color: Colors.white,

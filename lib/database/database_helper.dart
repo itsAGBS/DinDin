@@ -6,6 +6,8 @@ class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
 
+  static const String _chaveLimiteMensal = 'limite_mensal';
+
   DatabaseHelper._init();
 
   Future<Database> get database async {
@@ -19,7 +21,7 @@ class DatabaseHelper {
     final path = join(dbPath, fileName);
     return await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -37,6 +39,8 @@ class DatabaseHelper {
         sincronizado INTEGER NOT NULL DEFAULT 0
       )
     ''');
+
+    await _criarTabelaSettings(db);
   }
 
   Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
@@ -45,6 +49,20 @@ class DatabaseHelper {
         'ALTER TABLE transactions ADD COLUMN sincronizado INTEGER NOT NULL DEFAULT 0',
       );
     }
+
+    // Não use else: uma instalação antiga pode precisar executar as duas etapas.
+    if (oldVersion < 3) {
+      await _criarTabelaSettings(db);
+    }
+  }
+
+  Future<void> _criarTabelaSettings(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS settings (
+        chave TEXT PRIMARY KEY,
+        valor TEXT NOT NULL
+      )
+    ''');
   }
 
   Future<TransactionModel> insertTransaction(TransactionModel t) async {
@@ -78,6 +96,36 @@ class DatabaseHelper {
       saldo += t.tipo == TransactionType.receita ? t.valor : -t.valor;
     }
     return saldo;
+  }
+
+  /// Salva o limite mensal localmente. Ele é uma preferência do dispositivo
+  /// e não participa da sincronização das transações com o Firestore.
+  Future<void> salvarLimiteMensal(double valor) async {
+    final db = await instance.database;
+    await db.insert(
+      'settings',
+      {
+        'chave': _chaveLimiteMensal,
+        'valor': valor.toStringAsFixed(2),
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<double?> getLimiteMensal() async {
+    final db = await instance.database;
+    final result = await db.query(
+      'settings',
+      columns: ['valor'],
+      where: 'chave = ?',
+      whereArgs: [_chaveLimiteMensal],
+      limit: 1,
+    );
+
+    if (result.isEmpty) return null;
+    final valor = result.first['valor'];
+    if (valor == null) return null;
+    return double.tryParse(valor.toString());
   }
 
   Future<List<TransactionModel>> getTransacoesNaoSincronizadas() async {
@@ -125,4 +173,3 @@ class DatabaseHelper {
     db.close();
   }
 }
-
