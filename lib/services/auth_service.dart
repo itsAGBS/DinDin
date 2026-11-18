@@ -1,4 +1,9 @@
+
+import 'dart:io';
+
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
@@ -78,6 +83,90 @@ class AuthService {
     }
   }
 
+  bool get possuiSenha =>
+      currentUser?.providerData.any((info) => info.providerId == 'password') ??
+      false;
+
+  Future<void> atualizarNome(String nome) async {
+    final user = _firebaseAuth.currentUser;
+
+    if (user == null) {
+      throw AuthException('Sessão expirada. Entre novamente.');
+    }
+
+    try {
+      await user.updateDisplayName(nome.trim());
+      await user.reload();
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(_mensagemDeErro(e.code));
+    }
+  }
+
+  Future<void> atualizarFoto(File imagem) async {
+    final user = _firebaseAuth.currentUser;
+
+    if (user == null) {
+      throw AuthException('Sessão expirada. Entre novamente.');
+    }
+
+    try {
+      final referencia = FirebaseStorage.instance
+          .ref()
+          .child('fotos_perfil')
+          .child('${user.uid}.jpg');
+
+      await referencia.putFile(
+        imagem,
+        SettableMetadata(contentType: 'image/jpeg'),
+      );
+
+      final fotoUrl = await referencia.getDownloadURL();
+
+      await user.updatePhotoURL(fotoUrl);
+      await user.reload();
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(_mensagemDeErro(e.code));
+    } on FirebaseException catch (e) {
+      throw AuthException(
+        'Erro ao enviar imagem: ${e.message ?? e.code}',
+      );
+    }
+  }
+
+  Future<void> alterarSenha({
+    required String senhaAtual,
+    required String novaSenha,
+  }) async {
+    final user = _firebaseAuth.currentUser;
+    final email = user?.email;
+
+    if (user == null || email == null) {
+      throw AuthException('Sessão expirada. Entre novamente.');
+    }
+
+    try {
+      final credencial = EmailAuthProvider.credential(
+        email: email,
+        password: senhaAtual,
+      );
+
+      await user.reauthenticateWithCredential(credencial);
+      await user.updatePassword(novaSenha);
+    } on FirebaseAuthException catch (e) {
+      switch (e.code) {
+        case 'wrong-password':
+        case 'invalid-credential':
+          throw AuthException('Senha atual incorreta.');
+        case 'requires-recent-login':
+          throw AuthException(
+            'Por segurança, saia da conta, entre novamente e tente de novo.',
+          );
+        default:
+          throw AuthException(_mensagemDeErro(e.code));
+      }
+    }
+  }
+
   Future<void> sair() async {
     await Future.wait([
       _firebaseAuth.signOut(),
@@ -112,9 +201,9 @@ class AuthService {
 
 class AuthException implements Exception {
   AuthException(this.message);
+
   final String message;
 
   @override
   String toString() => message;
 }
-

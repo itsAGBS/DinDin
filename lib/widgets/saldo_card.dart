@@ -1,6 +1,10 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:provider/provider.dart';
+
 import '../theme/app_colors.dart';
+import '../providers/preferencias_provider.dart';
 
 class SaldoCard extends StatefulWidget {
   final double saldo;
@@ -19,6 +23,8 @@ class _SaldoCardState extends State<SaldoCard> {
 
   double get saldo => widget.saldo;
 
+  static const _saldoMascarado = 'R\$ ••••••';
+
   @override
   void initState() {
     super.initState();
@@ -28,35 +34,35 @@ class _SaldoCardState extends State<SaldoCard> {
   Future<void> _carregarPreferenciaVisibilidade() async {
     try {
       final valor = await _storage.read(key: _chaveSaldoVisivel);
+
       if (valor != null && mounted) {
         setState(() => _saldoVisivel = valor == 'true');
       }
     } catch (_) {
-      // Mantem o padrao (saldo visivel) se a leitura falhar.
+      // Mantém o padrão de saldo visível se a leitura falhar.
     }
   }
 
   Future<void> _alternarVisibilidadeSaldo() async {
     final novoValor = !_saldoVisivel;
+
     setState(() => _saldoVisivel = novoValor);
+
     try {
-      await _storage.write(key: _chaveSaldoVisivel, value: '$novoValor');
+      await _storage.write(
+        key: _chaveSaldoVisivel,
+        value: '$novoValor',
+      );
     } catch (_) {
-      // Falha ao persistir nao deve impedir a alternancia na tela.
+      // A falha ao salvar não impede a alternância na tela.
     }
-  }
-
-  static const _saldoMascarado = 'R\$ ••••••';
-
-  String _formatarMoeda(double valor) {
-    final sinal = valor < 0 ? '-' : '';
-    final valorAbsoluto = valor.abs().toStringAsFixed(2).replaceAll('.', ',');
-    return '${sinal}R\$ $valorAbsoluto';
   }
 
   @override
   Widget build(BuildContext context) {
     final cores = context.cores;
+    final preferencias = context.watch<PreferenciasProvider>();
+
     final corFundo = cores.corDoSaldo(saldo);
     final neutro = saldo == 0;
     final positivo = saldo >= 0;
@@ -100,11 +106,15 @@ class _SaldoCardState extends State<SaldoCard> {
                   const SizedBox(width: 4),
                   IconButton(
                     onPressed: _alternarVisibilidadeSaldo,
-                    tooltip: _saldoVisivel ? 'Ocultar saldo' : 'Mostrar saldo',
+                    tooltip: _saldoVisivel
+                        ? 'Ocultar saldo'
+                        : 'Mostrar saldo',
                     visualDensity: VisualDensity.compact,
                     padding: EdgeInsets.zero,
-                    constraints:
-                        const BoxConstraints(minWidth: 32, minHeight: 32),
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
                     icon: Icon(
                       _saldoVisivel
                           ? Icons.visibility_outlined
@@ -131,7 +141,9 @@ class _SaldoCardState extends State<SaldoCard> {
           ),
           const SizedBox(height: 8),
           Text(
-            _saldoVisivel ? _formatarMoeda(saldo) : _saldoMascarado,
+            _saldoVisivel
+                ? preferencias.formatarMoeda(saldo)
+                : _saldoMascarado,
             style: const TextStyle(
               fontFamily: 'Poppins',
               color: Colors.white,

@@ -3,6 +3,8 @@ import 'package:intl/intl.dart';
 import '../models/category_model.dart';
 import '../models/transaction_model.dart';
 import '../theme/app_colors.dart';
+import 'package:provider/provider.dart';
+import '../providers/preferencias_provider.dart';
 
 class TransacaoTile extends StatelessWidget {
   final TransactionModel transacao;
@@ -17,7 +19,7 @@ class TransacaoTile extends StatelessWidget {
     final cor = ehReceita ? cores.receita : cores.despesa;
     final sinal = ehReceita ? '+' : '-';
     final valorFormatado =
-        'R\$ ${transacao.valor.abs().toStringAsFixed(2).replaceAll('.', ',')}';
+        context.watch<PreferenciasProvider>().formatarMoeda(transacao.valor.abs());
     final titulo = transacao.temDescricao ? transacao.descricao : transacao.categoria;
 
     return InkWell(

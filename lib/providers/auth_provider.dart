@@ -1,3 +1,5 @@
+
+import 'dart:io';
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -32,6 +34,8 @@ class AuthProvider extends ChangeNotifier {
   String? get erro => _erro;
   bool get estaLogado => _status == AuthStatus.autenticado;
 
+  bool get possuiSenha => _authService.possuiSenha;
+
   Future<bool> cadastrar({
     required String email,
     required String senha,
@@ -56,6 +60,49 @@ class AuthProvider extends ChangeNotifier {
 
   Future<bool> redefinirSenha(String email) async {
     return _executar(() => _authService.enviarEmailRedefinicaoSenha(email));
+  }
+
+  Future<String?> atualizarNome(String nome) async {
+    try {
+      await _authService.atualizarNome(nome);
+      _user = _authService.currentUser;
+      notifyListeners();
+      return null;
+    } on AuthException catch (e) {
+      return e.message;
+    } catch (_) {
+      return 'Algo deu errado. Tente novamente.';
+    }
+  }
+
+  Future<String?> atualizarFoto(File imagem) async {
+    try {
+      await _authService.atualizarFoto(imagem);
+      _user = _authService.currentUser;
+      notifyListeners();
+      return null;
+    } on AuthException catch (e) {
+      return e.message;
+    } catch (_) {
+      return 'Não foi possível atualizar a foto.';
+    }
+  }
+
+  Future<String?> alterarSenha({
+    required String senhaAtual,
+    required String novaSenha,
+  }) async {
+    try {
+      await _authService.alterarSenha(
+        senhaAtual: senhaAtual,
+        novaSenha: novaSenha,
+      );
+      return null;
+    } on AuthException catch (e) {
+      return e.message;
+    } catch (_) {
+      return 'Algo deu errado. Tente novamente.';
+    }
   }
 
   Future<void> sair() async {
@@ -96,4 +143,3 @@ class AuthProvider extends ChangeNotifier {
     super.dispose();
   }
 }
-
