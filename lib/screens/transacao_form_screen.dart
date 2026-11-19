@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-
 import '../models/category_model.dart';
 import '../models/transaction_model.dart';
 import '../providers/transaction_provider.dart';
 import '../theme/app_colors.dart';
+import '../providers/preferencias_provider.dart';
 
 class TransacaoFormScreen extends StatefulWidget {
   const TransacaoFormScreen({
@@ -167,7 +167,7 @@ class _TransacaoFormScreenState extends State<TransacaoFormScreen> {
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   decoration: InputDecoration(
                     labelText: 'Valor',
-                    prefixText: 'R\$ ',
+                    prefixText: '${context.watch<PreferenciasProvider>().moeda.simbolo} ',
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
                       borderSide: BorderSide(color: corDoTipo, width: 1.5),

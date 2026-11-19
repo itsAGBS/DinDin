@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:DinDin/models/transaction_model.dart';
-import 'package:DinDin/utils/calculos_mensais.dart';
+import 'package:din_din/models/transaction_model.dart';
+import 'package:din_din/utils/calculos_mensais.dart';
 
 TransactionModel _despesa(
   double valor,
