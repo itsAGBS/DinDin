@@ -109,8 +109,7 @@ class TransactionProvider extends ChangeNotifier {
     try {
       await _syncService.excluirTransacao(uid, id);
     } catch (_) {
-      // A exclusão local já ocorreu; a estratégia de retry da nuvem pode ser
-      // aprimorada separadamente sem afetar orçamento e gráficos.
+      // Sem conexão, a exclusão vale só no aparelho; a nuvem não é atualizada.
     }
   }
 

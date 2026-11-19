@@ -32,7 +32,6 @@ class _MarkPainter extends CustomPainter {
     final s = size.width;
     final centro = Offset(s / 2, s / 2);
 
-    // Quadrado arredondado
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromLTWH(0, 0, s, s),
@@ -41,14 +40,12 @@ class _MarkPainter extends CustomPainter {
       Paint()..color = DinDinMark._fundo,
     );
 
-    // Moeda verde
     canvas.drawCircle(
       centro,
       s * 0.3408,
       Paint()..color = DinDinMark._moeda,
     );
 
-    // Seta (Λ) com pontas arredondadas
     final seta = Path()
       ..moveTo(centro.dx - s * 0.2123, centro.dy + s * 0.1522)
       ..lineTo(centro.dx, centro.dy - s * 0.2039)
@@ -70,7 +67,7 @@ class _MarkPainter extends CustomPainter {
 }
 
 /// Logo completa: ícone + "DinDin". O texto se adapta ao tema:
-/// "Din" na cor de texto principal e "Din" em verde (mais claro no modo escuro).
+/// A primeira "Din" usa a cor de texto principal e a segunda, o verde das receitas.
 class DinDinLogo extends StatelessWidget {
   /// Tamanho do ícone. O texto é proporcional a ele.
   final double markSize;

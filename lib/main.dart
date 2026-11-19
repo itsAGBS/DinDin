@@ -8,6 +8,8 @@ import 'screens/bloqueio_screen.dart';
 import 'firebase_options.dart';
 import 'providers/auth_provider.dart';
 import 'providers/bloqueio_provider.dart';
+import 'providers/foto_perfil_provider.dart';
+import 'providers/preferencias_provider.dart';
 import 'providers/transaction_provider.dart';
 import 'screens/login_screen.dart';
 import 'theme/app_colors.dart';
@@ -17,7 +19,9 @@ Future<void> main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(const DinDinApp());
+  // Carrega as preferências antes do primeiro frame para já abrir no tema salvo.
+  final preferencias = await PreferenciasProvider.carregar();
+  runApp(DinDinApp(preferencias: preferencias));
 }
 
 ThemeData _construirTema({required AppPalette paleta, required Brightness brilho}) {
@@ -124,7 +128,9 @@ ThemeData _construirTema({required AppPalette paleta, required Brightness brilho
 }
 
 class DinDinApp extends StatelessWidget {
-  const DinDinApp({super.key});
+  const DinDinApp({super.key, required this.preferencias});
+
+  final PreferenciasProvider preferencias;
 
   @override
   Widget build(BuildContext context) {
@@ -132,15 +138,20 @@ class DinDinApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => BloqueioProvider()),
+        ChangeNotifierProvider(create: (_) => FotoPerfilProvider()),
+        ChangeNotifierProvider.value(value: preferencias),
         ChangeNotifierProvider(create: (_) => TransactionProvider()..carregarDados()),
       ],
-      child: MaterialApp(
-        title: 'DinDin',
-        debugShowCheckedModeBanner: false,
-        themeMode: ThemeMode.system,
-        theme: _construirTema(paleta: AppPalette.claro, brilho: Brightness.light),
-        darkTheme: _construirTema(paleta: AppPalette.escuro, brilho: Brightness.dark),
-        home: const AuthGate(),
+      // Consumer: o MaterialApp precisa reconstruir quando o tema muda.
+      child: Consumer<PreferenciasProvider>(
+        builder: (context, prefs, _) => MaterialApp(
+          title: 'DinDin',
+          debugShowCheckedModeBanner: false,
+          themeMode: prefs.themeMode,
+          theme: _construirTema(paleta: AppPalette.claro, brilho: Brightness.light),
+          darkTheme: _construirTema(paleta: AppPalette.escuro, brilho: Brightness.dark),
+          home: const AuthGate(),
+        ),
       ),
     );
   }
