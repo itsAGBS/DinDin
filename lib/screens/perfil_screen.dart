@@ -20,15 +20,10 @@ class PerfilScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Fundo, barra e título vêm do tema (claro/escuro) definido em main.dart.
     return Scaffold(
-      backgroundColor: AppColors.fundo,
       appBar: AppBar(
-        backgroundColor: AppColors.fundo,
-        elevation: 0,
-        title: const Text(
-          'Configurações',
-          style: TextStyle(fontFamily: 'Poppins', color: Colors.black87),
-        ),
+        title: const Text('Configurações'),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
@@ -107,6 +102,7 @@ class _CabecalhoPerfil extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cores = context.cores;
     final auth = context.watch<AuthProvider>();
     final user = auth.user;
     final nome = (user?.displayName?.trim().isNotEmpty ?? false)
@@ -129,7 +125,7 @@ if (user?.photoURL != null && user!.photoURL!.isNotEmpty) {
           children: [
             CircleAvatar(
               radius: 44,
-              backgroundColor: AppColors.destaque,
+              backgroundColor: cores.saldoDestaqueFundo,
               backgroundImage: imagemAvatar,
               child: imagemAvatar == null
                   ? Text(
@@ -152,9 +148,9 @@ if (user?.photoURL != null && user!.photoURL!.isNotEmpty) {
                 child: Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: AppColors.acao,
+                    color: cores.azul,
                     shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.fundo, width: 2),
+                    border: Border.all(color: cores.fundo, width: 2),
                   ),
                   child: const Icon(Icons.camera_alt, color: Colors.white, size: 16),
                 ),
@@ -180,7 +176,7 @@ if (user?.photoURL != null && user!.photoURL!.isNotEmpty) {
                   ),
                 ),
                 const SizedBox(width: 6),
-                const Icon(Icons.edit, size: 16, color: Colors.black45),
+                Icon(Icons.edit, size: 16, color: cores.textoSecundario),
               ],
             ),
           ),
@@ -188,7 +184,7 @@ if (user?.photoURL != null && user!.photoURL!.isNotEmpty) {
         const SizedBox(height: 4),
         Text(
           user?.email ?? '',
-          style: const TextStyle(fontFamily: 'Poppins', color: Colors.black54, fontSize: 13),
+          style: TextStyle(fontFamily: 'Poppins', color: cores.textoSecundario, fontSize: 13),
         ),
       ],
     );
@@ -210,7 +206,7 @@ class _SecaoPreferencias extends StatelessWidget {
           children: Moeda.values
               .map((m) => ListTile(
                     title: Text(m.nome, style: const TextStyle(fontFamily: 'Poppins')),
-                    trailing: m == preferencias.moeda ? const Icon(Icons.check, color: AppColors.acao) : null,
+                    trailing: m == preferencias.moeda ? Icon(Icons.check, color: context.cores.azul) : null,
                     onTap: () => Navigator.of(context).pop(m),
                   ))
               .toList(),
@@ -226,19 +222,21 @@ class _SecaoPreferencias extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final preferencias = context.watch<PreferenciasProvider>();
+    // Com ThemeMode.system o tema efetivo depende do aparelho; usar o brilho
+    // atual do tema evita o switch aparecer desligado com o app já escuro.
+    final modoEscuroAtivo = Theme.of(context).brightness == Brightness.dark;
 
     return _CartaoSecao(
       titulo: 'Preferências',
       filhos: [
         SwitchListTile(
+          secondary: Icon(modoEscuroAtivo ? Icons.dark_mode : Icons.light_mode),
           title: const Text('Modo escuro'),
           subtitle: const Text('Usar tema escuro no app'),
-          value: preferencias.themeMode == ThemeMode.dark,
-onChanged: (ativo) {
-  preferencias.definirTema(
-    ativo ? ThemeMode.dark : ThemeMode.light,
-  );
-},
+          value: modoEscuroAtivo,
+          onChanged: (ativo) => preferencias.definirTema(
+            ativo ? ThemeMode.dark : ThemeMode.light,
+          ),
         ),
         const Divider(height: 1),
         ListTile(
@@ -285,7 +283,7 @@ class _SecaoConta extends StatelessWidget {
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Sair', style: TextStyle(color: AppColors.despesa)),
+            child: Text('Sair', style: TextStyle(color: context.cores.despesa)),
           ),
         ],
       ),
@@ -335,8 +333,8 @@ class _SecaoConta extends StatelessWidget {
         ],
         const Divider(height: 1),
         ListTile(
-          leading: const Icon(Icons.logout, color: AppColors.despesa),
-          title: const Text('Sair da conta', style: TextStyle(color: AppColors.despesa)),
+          leading: Icon(Icons.logout, color: context.cores.despesa),
+          title: Text('Sair da conta', style: TextStyle(color: context.cores.despesa)),
           onTap: () => _sair(context),
         ),
       ],
@@ -424,7 +422,7 @@ class _DialogoAlterarSenhaState extends State<_DialogoAlterarSenha> {
           ),
           if (_erroLocal != null) ...[
             const SizedBox(height: 8),
-            Text(_erroLocal!, style: const TextStyle(color: AppColors.despesa, fontSize: 12)),
+            Text(_erroLocal!, style: TextStyle(color: context.cores.despesa, fontSize: 12)),
           ],
         ],
       ),
@@ -465,11 +463,11 @@ class _CartaoSecao extends StatelessWidget {
           padding: const EdgeInsets.only(left: 4, bottom: 8),
           child: Text(
             titulo,
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: 'Poppins',
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: Colors.black54,
+              color: context.cores.textoSecundario,
             ),
           ),
         ),
