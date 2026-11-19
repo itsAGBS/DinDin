@@ -1,6 +1,6 @@
 
 name: din_din
-description: "Sistema Financeiro!!."
+description: "DinDin: app mobile de controle financeiro pessoal."
 publish_to: 'none'
 
 version: 1.0.0+1
@@ -24,7 +24,6 @@ dependencies:
   google_sign_in: ^6.2.1
   google_fonts: ^9.0.0
 
-  cupertino_icons: ^1.0.8
   intl: ^0.20.3
 
   local_auth: ^2.3.0

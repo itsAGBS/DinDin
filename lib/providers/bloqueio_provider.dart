@@ -2,16 +2,7 @@ import 'package:flutter/widgets.dart';
 
 import '../services/bloqueio_service.dart';
 
-enum StatusBloqueio {
-
-  carregando,
-
-  desativado,
-
-  bloqueado,
-
-  desbloqueado,
-}
+enum StatusBloqueio { carregando, desativado, bloqueado, desbloqueado }
 
 class BloqueioProvider extends ChangeNotifier with WidgetsBindingObserver {
   BloqueioProvider({BloqueioService? service})

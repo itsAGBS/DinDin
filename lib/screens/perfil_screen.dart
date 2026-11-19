@@ -44,9 +44,7 @@ class PerfilScreen extends StatelessWidget {
   }
 }
 
-// ---------------------------------------------------------------------
 // Cabeçalho: foto, nome (editável) e e-mail
-// ---------------------------------------------------------------------
 
 class _CabecalhoPerfil extends StatelessWidget {
   const _CabecalhoPerfil();
@@ -197,9 +195,7 @@ if (user?.photoURL != null && user!.photoURL!.isNotEmpty) {
   }
 }
 
-// ---------------------------------------------------------------------
 // Preferências do app
-// ---------------------------------------------------------------------
 
 class _SecaoPreferencias extends StatelessWidget {
   const _SecaoPreferencias();
@@ -264,9 +260,7 @@ onChanged: (ativo) {
   }
 }
 
-// ---------------------------------------------------------------------
 // Conta: segurança, senha e logout
-// ---------------------------------------------------------------------
 
 class _SecaoConta extends StatelessWidget {
   const _SecaoConta();
@@ -454,9 +448,7 @@ class _DialogoAlterarSenhaState extends State<_DialogoAlterarSenha> {
   }
 }
 
-// ---------------------------------------------------------------------
 // Cartão reutilizável de seção (título + lista de opções)
-// ---------------------------------------------------------------------
 
 class _CartaoSecao extends StatelessWidget {
   final String titulo;
