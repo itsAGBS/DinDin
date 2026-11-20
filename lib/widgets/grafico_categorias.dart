@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../theme/app_colors.dart';
+import '../theme/app_estilo.dart';
 import '../utils/formatos_br.dart';
 
 /// Gráfico de rosca das despesas do mês por categoria.
@@ -21,19 +22,18 @@ class GraficoCategorias extends StatelessWidget {
   });
 
   List<Color> _paleta(AppPalette cores) => [
-        cores.azul,
-        cores.alerta,
-        const Color(0xFF8B5CF6),
-        const Color(0xFF14B8A6),
-        const Color(0xFFEC4899),
-        const Color(0xFF06B6D4),
-      ];
+    cores.azul,
+    cores.alerta,
+    const Color(0xFF8B5CF6),
+    const Color(0xFF14B8A6),
+    const Color(0xFFEC4899),
+    const Color(0xFF06B6D4),
+  ];
 
   List<_Fatia> _montarFatias(AppPalette cores) {
-    final ordenadas = despesasPorCategoria.entries
-        .where((e) => e.value > 0)
-        .toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
+    final ordenadas =
+        despesasPorCategoria.entries.where((e) => e.value > 0).toList()
+          ..sort((a, b) => b.value.compareTo(a.value));
 
     if (ordenadas.isEmpty) return const [];
 
@@ -69,49 +69,54 @@ class GraficoCategorias extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: cores.cardFundo,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: cores.borda),
-        boxShadow: [
-          BoxShadow(
-            color: cores.sombra,
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
+      padding: const EdgeInsets.all(AppEstilo.paddingCard),
+      decoration: AppEstilo.cardDecoracao(cores),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Gastos por categoria',
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: cores.textoPrincipal,
-            ),
+          Row(
+            children: [
+              IconeChip(icone: Icons.donut_large_rounded, cor: cores.azul),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Gastos por categoria',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppEstilo.titulo(cores),
+                    ),
+                    Text(
+                      FormatosBR.nomeDoMes(referencia.month),
+                      style: AppEstilo.subtitulo(cores),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          Text(
-            FormatosBR.nomeDoMes(referencia.month),
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              color: cores.textoSecundario,
-            ),
-          ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
           if (fatias.isEmpty || total <= 0)
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 20),
+              padding: const EdgeInsets.symmetric(vertical: 16),
               child: Center(
-                child: Text(
-                  'Nenhuma despesa neste mês para analisar.',
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.poppins(
-                    fontSize: 13,
-                    color: cores.textoSecundario,
-                  ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.donut_large_rounded,
+                      size: 32,
+                      color: cores.textoSecundario.withValues(alpha: 0.6),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Nenhuma despesa neste mês para analisar.',
+                      textAlign: TextAlign.center,
+                      style: AppEstilo.subtitulo(cores, tamanho: 13),
+                    ),
+                  ],
                 ),
               ),
             )
@@ -138,35 +143,31 @@ class GraficoCategorias extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Total',
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          color: cores.textoSecundario,
+                  SizedBox(
+                    width: 104,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text('Total', style: AppEstilo.subtitulo(cores)),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            FormatosBR.moeda(total),
+                            maxLines: 1,
+                            style: AppEstilo.titulo(cores),
+                          ),
                         ),
-                      ),
-                      Text(
-                        FormatosBR.moeda(total),
-                        style: GoogleFonts.poppins(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: cores.textoPrincipal,
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
+            Divider(height: 1, color: cores.borda),
+            const SizedBox(height: 6),
             for (final f in fatias)
-              _LinhaLegenda(
-                fatia: f,
-                percentual: f.valor / total * 100,
-              ),
+              _LinhaLegenda(fatia: f, percentual: f.valor / total * 100),
           ],
         ],
       ),
@@ -186,10 +187,7 @@ class _LinhaLegenda extends StatelessWidget {
   final _Fatia fatia;
   final double percentual;
 
-  const _LinhaLegenda({
-    required this.fatia,
-    required this.percentual,
-  });
+  const _LinhaLegenda({required this.fatia, required this.percentual});
 
   @override
   Widget build(BuildContext context) {
@@ -200,7 +198,7 @@ class _LinhaLegenda extends StatelessWidget {
     );
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 5),
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
           Container(
@@ -208,7 +206,7 @@ class _LinhaLegenda extends StatelessWidget {
             height: 10,
             decoration: BoxDecoration(
               color: fatia.cor,
-              shape: BoxShape.circle,
+              borderRadius: BorderRadius.circular(3),
             ),
           ),
           const SizedBox(width: 10),
@@ -216,6 +214,7 @@ class _LinhaLegenda extends StatelessWidget {
             child: Text(
               fatia.nome,
               style: estilo,
+              maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
           ),
